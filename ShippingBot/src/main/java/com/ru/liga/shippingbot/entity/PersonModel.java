@@ -17,6 +17,7 @@ import java.io.IOException;
 public class PersonModel {
     byte[] bytesFromFile;
     Person lover;
+    String status;
 
     public PersonModel(Person lover) {
         this.lover = lover;

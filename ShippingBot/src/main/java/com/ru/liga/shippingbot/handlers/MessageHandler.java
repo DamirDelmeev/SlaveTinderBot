@@ -127,7 +127,8 @@ public class MessageHandler {
 
         Person lover = response.getBody().getLover();
         if (!lover.getName().equals("")) {
-            sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName());
+            sendMessage = new SendMessage
+                    (longId.toString(), lover.getGender() + " - " + lover.getName()+"\n"+response.getBody().getStatus());
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
         } else {
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
@@ -173,7 +174,7 @@ public class MessageHandler {
 
             Person lover = response.getBody().getLover();
             if (!lover.getName().equals("")) {
-                sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName());
+                sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName()+"\n"+response.getBody().getStatus());
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
             } else {
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
@@ -213,7 +214,7 @@ public class MessageHandler {
             Person lover = response.getBody().getLover();
 
             if (!lover.getName().equals("")) {
-                sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName());
+                sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName()+"\n"+response.getBody().getStatus());
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
             } else {
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
