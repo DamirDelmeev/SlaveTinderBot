@@ -1,0 +1,12 @@
+telegram:
+  api-url: "https://api.telegram.org/"
+  webhook-path: "https://3be5-188-227-8-212.ngrok.io"
+  bot-name: "FindMyPairBot"
+  bot-token: "5123717861:AAFGrC2LcPDY1R_xHpt9WZwgFkrwNetGxqQ"
+spring:
+  #    host: "<...>.compute-1.amazonaws.com"
+  port: "8585"
+  #    password:
+  ssl: true
+server:
+  port: "8585"
