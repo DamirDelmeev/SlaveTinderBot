@@ -26,12 +26,12 @@ public class TextHandler {
     public String getTranslation(String text) {
         String[] wordsBeforeChange = text.split("[ \n]");
         List<String> wordsAfterChange = new ArrayList<>();
-        List<String> listName= loadNameList();
+        List<String> listName = loadNameList();
         listName = listName.stream().map(name -> name = name.toLowerCase(Locale.ROOT)).collect(Collectors.toList());
         for (String s : wordsBeforeChange) {
             String wordWithoutSymbols = s.replaceAll("[^а-яёА-ЯЁ-]", "");
             if (!wordWithoutSymbols.isEmpty()) {
-                String wordFI = geFi(wordWithoutSymbols,listName);
+                String wordFI = geFi(wordWithoutSymbols, listName);
                 String wordEt = getEt(wordFI);
                 String wordEr = getErSymbol(wordEt);
                 String wordDecimalI = geDecimalI(wordEr);
@@ -57,18 +57,19 @@ public class TextHandler {
             for (String line; (line = reader.readLine()) != null; ) {
                 list.add(line);
             }
-        }catch (IOException E){
+        } catch (IOException E) {
             throw new RuntimeException("Ошибка при поиске файла с именами");
         }
         return list;
     }
+
     /**
      * Метод сравнивает два списка слов на наличие знаков препинания
      *
      * @param words,listAfterChange -слова без перевода и слова с переводом
      * @return список слов со знаками препинания и переводом
      */
-    private List<String> getResulLine (String[]words, List < String > listAfterChange){
+    private List<String> getResulLine(String[] words, List<String> listAfterChange) {
         List<String> results = new ArrayList<>();
         List<String> wordsBeforeChange = Arrays.asList(words);
         for (int i = 0; i < wordsBeforeChange.size(); i++) {
@@ -89,7 +90,7 @@ public class TextHandler {
      *
      * @param results,wordBefore,wordAfter -результат, слова без перевода и слова с переводом
      */
-    private void addMark (List < String > results, String wordBefore, String wordAfter){
+    private void addMark(List<String> results, String wordBefore, String wordAfter) {
         StringBuilder stringBuilder = new StringBuilder(wordAfter);
         for (int j = 0; j < wordBefore.length(); j++) {
             if (!Character.isLetter(wordBefore.charAt(j)) & (wordBefore.charAt(j) != '-' | wordBefore.length() == 1)) {
@@ -104,7 +105,7 @@ public class TextHandler {
      *
      * @param wordAfter -слова с переводом
      */
-    private int getErCounter (String wordAfter){
+    private int getErCounter(String wordAfter) {
         int counterEr = 0;
         if (wordAfter.contains("ъ-")) {
             counterEr++;
@@ -122,8 +123,8 @@ public class TextHandler {
      * @param wordDecimalI -слово в котором уже поменялось часть символов
      * @return wordDecimalI-слов с символом  Ѣ (Ять)
      */
-    private String getEt (String wordDecimalI){
-        List<String>listWithRoot=loadRootList();
+    private String getEt(String wordDecimalI) {
+        List<String> listWithRoot = loadRootList();
         for (String root : listWithRoot) {
             String stringBuilder = changeSymbolsInRoot(wordDecimalI, root);
             if (stringBuilder != null) return stringBuilder;
@@ -142,7 +143,7 @@ public class TextHandler {
             for (String line; (line = reader.readLine()) != null; ) {
                 list.add(line);
             }
-        }catch (IOException E){
+        } catch (IOException E) {
             throw new RuntimeException("Ошибка при поиске файла с именами");
         }
         return list;
@@ -154,7 +155,7 @@ public class TextHandler {
      * @param wordDecimalI,root -слово в котором уже поменялось часть символов и корень
      * @return wordDecimalI-слов с символом Ѣ (Ять)
      */
-    private String changeSymbolsInRoot (String wordDecimalI, String root){
+    private String changeSymbolsInRoot(String wordDecimalI, String root) {
         if (wordDecimalI.toLowerCase().contains(root)) {
             int begin = wordDecimalI.toLowerCase().indexOf(root);
 
@@ -179,7 +180,7 @@ public class TextHandler {
      * @param wordWithoutSymbols -слово в котором уже поменялось часть символов listName-список имён с буквой ф
      * @return wordDecimalI-слово с символом ѳ (фита)
      */
-    private String geFi (String wordWithoutSymbols,List<String> listName){
+    private String geFi(String wordWithoutSymbols, List<String> listName) {
         StringBuilder stringBuilder = new StringBuilder(wordWithoutSymbols);
 
         if (listName.contains(wordWithoutSymbols.toLowerCase(Locale.ROOT))) {
@@ -200,7 +201,7 @@ public class TextHandler {
      * @param wordEr -слово в котором уже поменялось часть символов
      * @return wordDecimalI-слово с символом i («и десятеричное»)
      */
-    private String geDecimalI (String wordEr){
+    private String geDecimalI(String wordEr) {
         for (int i = 0; i < wordEr.length(); i++) {
             if ((wordEr.charAt(i)) == 'и' & wordEr.length() > i + 1 && vowels.contains(wordEr.charAt(i + 1))) {
                 StringBuilder stringBuilder = new StringBuilder(wordEr);
@@ -218,7 +219,7 @@ public class TextHandler {
      * @param word -слово в котором уже поменялось часть символов
      * @return wordDecimalI-слово с символом  ъ-"ер"
      */
-    private String getErSymbol (String word){
+    private String getErSymbol(String word) {
         if (!word.contains("-") & word.length() >= 1) {
             if (!vowels.contains(word.charAt(word.length() - 1))) {
                 word = word + "ъ";

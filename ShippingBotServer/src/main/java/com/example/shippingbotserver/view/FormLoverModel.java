@@ -2,7 +2,10 @@ package com.example.shippingbotserver.view;
 
 import com.example.shippingbotserver.entity.Lover;
 import com.example.shippingbotserver.model.LoverModel;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.io.IOException;
@@ -20,7 +23,7 @@ public class FormLoverModel {
     String status;
 
     public FormLoverModel(Lover lover) {
-        lover.setGender(lover.getGender().equals("boy")?"Сударь":"Сударыня");
+        lover.setGender(lover.getGender().equals("boy") ? "Сударь" : "Сударыня");
         this.lover = lover;
         status = "";
     }

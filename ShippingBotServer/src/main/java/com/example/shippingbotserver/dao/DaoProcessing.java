@@ -67,7 +67,7 @@ public class DaoProcessing {
     public FormLoverModel dislike(Lover id) throws IOException {
         Lover lover = repository.findById(id.getId()).get();
         LoverModel loverModel = showMe(lover);
-        if (Objects.equals(loverModel.getId(), -1L)){
+        if (Objects.equals(loverModel.getId(), -1L)) {
             return new FormLoverModel(new Lover(loverModel));
         }
         lover.getDislikes().add(loverModel);
@@ -82,10 +82,10 @@ public class DaoProcessing {
         return formLoverModel;
     }
 
-    public FormLoverModel like(Lover id) throws IOException{
+    public FormLoverModel like(Lover id) throws IOException {
         Lover lover = repository.findById(id.getId()).get();
         LoverModel loverModel = showMe(lover);
-        if (Objects.equals(loverModel.getId(), -1L)){
+        if (Objects.equals(loverModel.getId(), -1L)) {
             return new FormLoverModel(new Lover(loverModel));
         }
         lover.getLike().add(loverModel);
@@ -100,39 +100,39 @@ public class DaoProcessing {
         return formLoverModel;
     }
 
-    public void saveLover(Lover person){
-        if (person.getGender().equals("Сударь")){
+    public void saveLover(Lover person) {
+        if (person.getGender().equals("Сударь")) {
             person.setGender("boy");
-        }else{
+        } else {
             person.setGender("girl");
         }
-        if (person.getPreference().equals("Сударя")){
+        if (person.getPreference().equals("Сударя")) {
             person.setPreference("boy");
-        }else if (person.getPreference().equals("Всех")){
+        } else if (person.getPreference().equals("Всех")) {
             person.setPreference("all");
-        } else{
+        } else {
             person.setPreference("girl");
         }
         repository.save(person);
     }
 
-    public void deleteLover(Long id){
+    public void deleteLover(Long id) {
         repository.delete(repository.findById(id).get());
     }
 
-    private String getLoverModelStatus(Lover me, LoverModel show){
+    private String getLoverModelStatus(Lover me, LoverModel show) {
         String nameOfLoverModel = show.getName();
-        if (me.mutuallyLovers().contains(show)){
+        if (me.mutuallyLovers().contains(show)) {
             return "Взаимность";
-        }else if (me.getLikeMe().contains(show)){
+        } else if (me.getLikeMe().contains(show)) {
             return "Вы любимъ";
-        }else if (me.getLike().contains(show)){
+        } else if (me.getLike().contains(show)) {
             return "Любимъ вами";
         }
         return "";
     }
 
-    private LoverModel showMe(Lover lover){
+    private LoverModel showMe(Lover lover) {
         List<LoverModel> listOfLovers = modelRepository.findAll();
         List<LoverModel> likeOfLover = listOfLovers.stream().filter(l -> lover.getLike().contains(l)).collect(Collectors.toList());
         long count = listOfLovers.stream()
@@ -148,13 +148,34 @@ public class DaoProcessing {
                 .filter(l -> !lover.getLike().contains(l))
                 .filter(l -> isPreference(new LoverModel(lover), l))
                 .collect(Collectors.toList());
-        if (listOfLovers.isEmpty()){
+        if (listOfLovers.isEmpty()) {
             return new LoverModel(-1L, "", "", "Здесь никого нет", "");
         }
         return listOfLovers.get(0);
     }
 
-    private boolean isPreference(LoverModel one, LoverModel two){
+    public void update(Lover lover) {
+        Lover orig = repository.findById(lover.getId()).get();
+        lover.setDislikes(orig.getDislikes());
+        lover.setLike(orig.getLike());
+        lover.setLikeMe(orig.getLikeMe());
+        if (lover.getGender().equals("Сударь")) {
+            lover.setGender("boy");
+        } else {
+            lover.setGender("girl");
+        }
+        if (lover.getPreference().equals("Сударя")) {
+            lover.setPreference("boy");
+        }
+        if (lover.getPreference().equals("Сударыню")) {
+            lover.setPreference("girl");
+        } else {
+            lover.setPreference("all");
+        }
+        repository.save(lover);
+    }
+
+    private boolean isPreference(LoverModel one, LoverModel two) {
         return (one.getPreference().equals("all") || one.getPreference().equals(two.getGender())) &&
                 (two.getPreference().equals("all") || two.getPreference().equals(one.getGender()));
     }

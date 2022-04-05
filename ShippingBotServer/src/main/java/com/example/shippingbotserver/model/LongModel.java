@@ -23,12 +23,12 @@ public class LongModel {
     @Column(name = "counter")
     long counter;
 
-    public void increment(long size){
+    public void increment(long size) {
         if (++counter > size || counter < 0)
             counter = 0;
     }
 
-    public void decrement(long sizeDefault){
+    public void decrement(long sizeDefault) {
         if (--counter < 0 || counter > sizeDefault)
             counter = sizeDefault;
     }

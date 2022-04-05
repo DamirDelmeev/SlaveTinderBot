@@ -70,4 +70,25 @@ public class ReplyKeyboardMaker {
     }
 
 
+    public ReplyKeyboard getMenu(String firstButton, String secondButton, String thirdButton, String fourthButton) {
+        KeyboardRow rowFirst = new KeyboardRow();
+        rowFirst.add(new KeyboardButton(firstButton));
+        rowFirst.add(new KeyboardButton(secondButton));
+
+        KeyboardRow rowSecond = new KeyboardRow();
+        rowSecond.add(new KeyboardButton(thirdButton));
+        rowFirst.add(new KeyboardButton(fourthButton));
+
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(rowFirst);
+        keyboard.add(rowSecond);
+
+        final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboard(false);
+
+        return replyKeyboardMarkup;
+    }
 }

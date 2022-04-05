@@ -15,9 +15,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.starter.SpringWebhookBot;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 @Slf4j
 @Component
 @Getter
@@ -58,60 +55,116 @@ public class BotMassage extends SpringWebhookBot {
     }
 
     private BotApiMethod<?> handleUpdate(Update update) {
-        BotApiMethod<?> form = getForm(update);
+        BotApiMethod<?> form = createForm(update);
         if (form != null) {
             return form;
         } else {
-            BotApiMethod<?> choose = getChoose(update);
-            if (choose != null) {
-                return choose;
+            BotApiMethod<?> formAfterChoose = getChoose(update);
+            BotApiMethod<?> prepareToChange = getChangeInForm(update);
+
+            if (formAfterChoose != null) {
+                return formAfterChoose;
+            }
+            if (prepareToChange != null) {
+                return prepareToChange;
             }
             if (update.getMessage().getText().equals("Влево")) {
-                BotApiMethod<?> left = messageHandler.getLeft(update.getMessage());
+                BotApiMethod<?> left = messageHandler.getLeft(update.getMessage(), update.getMessage().getFrom().getId());
                 getPhoto(update);
                 return left;
             }
             if (update.getMessage().getText().equals("Вправо")) {
-                BotApiMethod<?> right = messageHandler.getRight(update.getMessage());
+                BotApiMethod<?> right = messageHandler.getRight(update.getMessage(), update.getMessage().getFrom().getId());
                 getPhoto(update);
                 return right;
             }
             if (update.getMessage().getText().equals("Меню")) {
-                return messageHandler.getMenu(update.getMessage());
+                return messageHandler.getMenu(update.getMessage().getFrom().getId());
             }
+            return addChanges(update);
+        }
+
+    }
+
+    private BotApiMethod<?> addChanges(Update update) {
+        BotState botState = messageHandler.getMap().get(update.getMessage().getFrom().getId()).getBotState();
+        if (botState.equals(BotState.CHANGE_GENDER)) {
+            BotApiMethod<?> formWithChanges = messageHandler.addChangeGender(update.getMessage(), update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return formWithChanges;
+        }
+        if (botState.equals(BotState.CHANGE_NAME)) {
+            BotApiMethod<?> formWithChanges = messageHandler.addChangeName(update.getMessage(), update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return formWithChanges;
+        }
+        if (botState.equals(BotState.CHANGE_DESCRIPTION)) {
+            BotApiMethod<?> formWithChanges = messageHandler.addChangeDescription(update.getMessage(), update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return formWithChanges;
+        }
+        if (botState.equals(BotState.CHANGE_PREFERENCE)) {
+            BotApiMethod<?> formWithChanges = messageHandler.addChangePreference(update.getMessage(), update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return formWithChanges;
         }
         return null;
     }
 
-    public BotApiMethod<?> getForm(Update update) {
+    private BotApiMethod<?> getChangeInForm(Update update) {
+        BotState botState = messageHandler.getMap().get(update.getMessage().getFrom().getId()).getBotState();
+        if (botState.equals(BotState.SHOW_CHANGES) & update.getMessage().getText().equals("Пол")) {
+            BotApiMethod<?> chooseToChanges = messageHandler.getChangeGenderSecondStage(update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return chooseToChanges;
+        }
+        if (botState.equals(BotState.SHOW_CHANGES) & update.getMessage().getText().equals("Имя")) {
+            BotApiMethod<?> chooseToChanges = messageHandler.getChangeNameSecondStage(update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return chooseToChanges;
+        }
+        if (botState.equals(BotState.SHOW_CHANGES) & update.getMessage().getText().equals("Описание")) {
+            BotApiMethod<?> chooseToChanges = messageHandler.getChangeDescriptionSecondStage(update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return chooseToChanges;
+        }
+        if (botState.equals(BotState.SHOW_CHANGES) & update.getMessage().getText().equals("Приоритет поиска")) {
+            BotApiMethod<?> chooseToChanges = messageHandler.getChangePreferenceSecondStage(update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return chooseToChanges;
+        }
+        return null;
+    }
+
+    public BotApiMethod<?> createForm(Update update) {
         if (update.getMessage() == null) {
             return new SendMessage();
         }
         Long idUser = update.getMessage().getFrom().getId();
         if (update.getMessage().getText().equals("/continue")) {
-            BotApiMethod<?> form = messageHandler.getContinue(update.getMessage());
+            BotApiMethod<?> form = messageHandler.getContinue(update.getMessage().getFrom().getId());
             getPhoto(update);
             return form;
         }
         if (update.getMessage().getText().equals("/start")) {
-            return messageHandler.startMessage(update.getMessage());
+            return messageHandler.startMessage(update.getMessage().getFrom().getId());
         }
         if (messageHandler.getMap().isEmpty()) {
-            BotApiMethod<?> form = messageHandler.getForm(update.getMessage());
+            BotApiMethod<?> form = messageHandler.getForm(update.getMessage().getFrom().getId());
             getPhoto(update);
             return form;
         }
         if (messageHandler.getMap().get(idUser).getGender() == null) {
-            return messageHandler.getUserGender(update.getMessage());
+            return messageHandler.getUserGender(update.getMessage(), update.getMessage().getFrom().getId());
         }
         if (messageHandler.getMap().get(idUser).getName() == null) {
-            return messageHandler.getUserName(update.getMessage());
+            return messageHandler.getUserName(update.getMessage(), update.getMessage().getFrom().getId());
         }
         if (messageHandler.getMap().get(idUser).getDescription() == null) {
-            return messageHandler.getUserDescription(update.getMessage());
+            return messageHandler.getUserDescription(update.getMessage(), update.getMessage().getFrom().getId());
         }
         if (messageHandler.getMap().get(idUser).getPreference() == null) {
-            return messageHandler.getUserPreference(update.getMessage());
+            return messageHandler.getUserPreference(update.getMessage(), update.getMessage().getFrom().getId());
         }
 
         return null;
@@ -119,18 +172,23 @@ public class BotMassage extends SpringWebhookBot {
 
     public BotApiMethod<?> getChoose(Update update) {
         BotState botState = messageHandler.getMap().get(update.getMessage().getFrom().getId()).getBotState();
+        if (botState != null & (update.getMessage().getText()).equals("Изменить анкету")) {
+            BotApiMethod<?> favorite = messageHandler.getChangeFormFirstStage(update.getMessage().getFrom().getId());
+            getPhoto(update);
+            return favorite;
+        }
         if (botState != null & (update.getMessage().getText()).equals("Любимцы")) {
-            BotApiMethod<?> favorite = messageHandler.getFavorite(update.getMessage());
+            BotApiMethod<?> favorite = messageHandler.getFavorite(update.getMessage(), update.getMessage().getFrom().getId());
             getPhoto(update);
             return favorite;
         }
         if (botState != null & (update.getMessage().getText()).equals("Поиск")) {
-            BotApiMethod<?> search = messageHandler.getSearch(update.getMessage());
+            BotApiMethod<?> search = messageHandler.getSearch(update.getMessage().getFrom().getId());
             getPhoto(update);
             return search;
         }
         if (botState != null & (update.getMessage().getText()).equals("Анкета")) {
-            BotApiMethod<?> form = messageHandler.getForm(update.getMessage());
+            BotApiMethod<?> form = messageHandler.getForm(update.getMessage().getFrom().getId());
             getPhoto(update);
             return form;
         }

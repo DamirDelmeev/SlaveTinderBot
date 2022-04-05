@@ -182,7 +182,7 @@ public class FormHandler {
             s = s.substring(0, s.length() - 1);
         }
         char[] arr = s.toCharArray();
-        int pos ;
+        int pos;
         for (int i = 0; i < arr.length; i++) {
             if (arr[i] == '\n' && arr[i + 1] != ' ' && arr[i - 1] != ' ') {
                 pos = i;

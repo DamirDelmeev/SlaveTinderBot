@@ -4,10 +4,8 @@ import com.example.shippingbotserver.model.LongModel;
 import com.example.shippingbotserver.model.LoverModel;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.context.annotation.Lazy;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,19 +59,19 @@ public class Lover {
         this.preference = loverModel.getPreference();
     }
 
-    public LoverModel getLover(boolean increment){
-        if (like.isEmpty() && likeMe.isEmpty()){
+    public LoverModel getLover(boolean increment) {
+        if (like.isEmpty() && likeMe.isEmpty()) {
             return getLoverEmptyModel();
         }
         Set<LoverModel> lovers = new HashSet<>(like);
         lovers.addAll(likeMe);
         List<LoverModel> loverAll = lovers.stream().sorted().collect(Collectors.toList());
-        if (watch == null){
+        if (watch == null) {
             watch = new LongModel(id, -1L);
         }
         if (increment) {
             watch.increment(loverAll.size() - 1);
-        }else {
+        } else {
             watch.decrement(loverAll.size() - 1);
         }
         return loverAll.get((int) watch.getCounter());
@@ -85,7 +83,7 @@ public class Lover {
     }
 
 
-    public Set<LoverModel> mutuallyLovers(){
+    public Set<LoverModel> mutuallyLovers() {
         return like.stream().filter(p -> likeMe.contains(p)).collect(Collectors.toSet());
     }
 

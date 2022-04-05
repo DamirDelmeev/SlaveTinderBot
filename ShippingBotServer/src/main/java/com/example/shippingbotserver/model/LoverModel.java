@@ -3,10 +3,11 @@ package com.example.shippingbotserver.model;
 import com.example.shippingbotserver.entity.Lover;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.Fetch;
 
-import javax.persistence.*;
-import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Table(name = "lover")
 @Entity
@@ -16,7 +17,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
 @NoArgsConstructor
-public class LoverModel implements Comparable<LoverModel>{
+public class LoverModel implements Comparable<LoverModel> {
     @Id
     Long id;
 
