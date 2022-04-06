@@ -9,9 +9,11 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс реализует инициализацию объектов для меню с кнопками.
+ */
 @Component
 public class ReplyKeyboardMaker {
-
     public ReplyKeyboardMarkup getKeyboardFirstStageForForm() {
         KeyboardRow rowFirst = new KeyboardRow();
         rowFirst.add(new KeyboardButton("Сударь"));
@@ -43,12 +45,10 @@ public class ReplyKeyboardMaker {
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(true);
-
         return replyKeyboardMarkup;
     }
 
     public ReplyKeyboard getMenu(String firstButton, String secondButton, String thirdButton) {
-
         KeyboardRow rowFirst = new KeyboardRow();
         rowFirst.add(new KeyboardButton(firstButton));
 
@@ -65,10 +65,8 @@ public class ReplyKeyboardMaker {
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(false);
-
         return replyKeyboardMarkup;
     }
-
 
     public ReplyKeyboard getMenu(String firstButton, String secondButton, String thirdButton, String fourthButton) {
         KeyboardRow rowFirst = new KeyboardRow();
@@ -88,7 +86,6 @@ public class ReplyKeyboardMaker {
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(false);
-
         return replyKeyboardMarkup;
     }
 }

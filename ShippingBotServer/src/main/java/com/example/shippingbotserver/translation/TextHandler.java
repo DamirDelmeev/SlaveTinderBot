@@ -220,11 +220,14 @@ public class TextHandler {
      * @return wordDecimalI-слово с символом  ъ-"ер"
      */
     private String getErSymbol(String word) {
-        if (!word.contains("-") & word.length() >= 1) {
-            if (!vowels.contains(word.charAt(word.length() - 1))) {
+        if (!word.contains("-") & word.length() > 1) {
+            if (!vowels.contains(Character.toLowerCase(word.charAt(word.length() - 1)))) {
                 word = word + "ъ";
             }
         } else {
+            if (word.length() == 1) {
+                return word;
+            }
             String[] split = word.split("-");
             return Arrays.stream(split).map(this::getErSymbol).collect(Collectors.joining("-"));
         }
@@ -234,15 +237,19 @@ public class TextHandler {
 
 //    public static void main(String[] args) {
 //        try {
-//            TextHandler textHandler = new TextHandler();
-//            System.out.println(textHandler.getTranslation("jdkvnjwkvkkwk Великий"));
-//            System.out.println(textHandler.getTranslation("Санкт-Петербург - это древний и очень красивый город нашей " +
-//                    "страны России. Он является вторым по величине после Москвы, это важнейший центр туризма, экономики, медицины, науки, культуры нашего государства. Этот город имеет очень богатое историческое наследие для всего человечества нашей планеты.\n" +
-//                    "Источник: Сочинение на тему Санкт-Петербург, России, Фусик, федот, Глафира, софья, беглец Еда"));
-//            System.out.println(textHandler.getTranslation("\"Санкт-Петербург\" - это древний, очень красивый город " +
-//                    "нашей"));
-//            System.out.println(textHandler.getTranslation(
-//                    "Привет, я помогу тебе найти кого-нибудь ,чтобы скрасить твоё одиночество."));
+//
+////            TextHandler textHandler = new TextHandler();
+//////            System.out.println(textHandler.getTranslation("Я"));
+////            System.out.println(textHandler.getTranslation("Статус пользователя: любим вами."));
+////            System.out.println(textHandler.getTranslation("Статус пользователя: вы любимы."));
+////            System.out.println(textHandler.getTranslation("Статус пользователя: взаимность."));
+////            System.out.println(textHandler.getTranslation("Санкт-Петербург - это древний и очень красивый город нашей " +
+////                    "страны России. Он является вторым по величине после Москвы, это важнейший центр туризма, экономики, медицины, науки, культуры нашего государства. Этот город имеет очень богатое историческое наследие для всего человечества нашей планеты.\n" +
+////                    "Источник: Сочинение на тему Санкт-Петербург, России, Фусик, федот, Глафира, софья, беглец Еда"));
+////            System.out.println(textHandler.getTranslation("\"Санкт-Петербург\" - это древний, очень красивый город " +
+////                    "нашей"));
+////            System.out.println(textHandler.getTranslation(
+////                    "Привет, я помогу тебе найти кого-нибудь, чтобы скрасить твоё одиночество."));
 //        }catch (RuntimeException e){
 //            throw  new RuntimeException("Пользователь ввёл текст с ошибками");
 //        }

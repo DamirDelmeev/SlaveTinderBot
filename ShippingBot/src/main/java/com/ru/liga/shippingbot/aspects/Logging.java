@@ -23,4 +23,14 @@ public class Logging {
     public void allMethodsMessageHandler(Throwable exception) {
         log.info("log message: {}", exception.getMessage());
     }
+
+    @AfterThrowing(pointcut = "execution(* com.ru.liga.shippingbot.handlers.FormHandler.*(..))", throwing = "exception")
+    public void allMethodsFormHandler(Throwable exception) {
+        log.info("log message: {}", exception.getMessage());
+    }
+
+    @AfterThrowing(pointcut = "execution(* com.ru.liga.shippingbot.handlers.ChangeHandler.*(..))", throwing = "exception")
+    public void allMethodsChangeHandler(Throwable exception) {
+        log.info("log message: {}", exception.getMessage());
+    }
 }

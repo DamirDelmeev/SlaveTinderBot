@@ -4,17 +4,15 @@ package com.ru.liga.shippingbot.handlers;
 import com.ru.liga.shippingbot.bot.BotState;
 import com.ru.liga.shippingbot.entity.Person;
 import com.ru.liga.shippingbot.entity.PersonModel;
+import com.ru.liga.shippingbot.handlers.template.Rest;
 import com.ru.liga.shippingbot.keyboard.ReplyKeyboardMaker;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.client.HttpServerErrorException;
@@ -24,85 +22,45 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Класс реализует основную часть обращений в базу данных.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Getter
 public class MessageHandler {
+    /**
+     * Объект класса меню с кнопками.
+     */
+    ReplyKeyboardMaker replyKeyboardMaker = new ReplyKeyboardMaker();
+    /**
+     * Поле: путь к картинке по запросу.
+     */
+    private String pathRequest = "src/main/resources/img/background.jpg";
+    /**
+     * Мапа с текущим пользователем.
+     */
+    Map<Long, Person> map;
 
-    final private ReplyKeyboardMaker replyKeyboardMaker;
-    private String pathRequest = "ShippingBot/src/main/resources/img/background.jpg";
-    @Getter
-    Map<Long, Person> map = new HashMap<>();
-
-
-    public BotApiMethod<?> startMessage(Long longId) {
-        map.put(longId, new Person());
-        map.get(longId).setId(longId);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Вы сударь иль сударыня?");
-        sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboardFirstStageForForm());
-        log.info("log message: {}", "Пользователь запустил создание анкеты и создал объект person.");
-        return sendMessage;
+    @Autowired
+    public void setMap(Map<Long, Person> map) {
+        this.map = map;
     }
 
-    public BotApiMethod<?> getUserGender(Message message, Long longId) {
-        if (message.getText().equals("Сударь") | message.getText().equals("Сударыня")) {
-            map.get(longId).setGender(message.getText());
-            SendMessage sendMessage = new SendMessage(longId.toString(), "Как вас величать?");
-            sendMessage.setReplyMarkup(new ReplyKeyboardRemove(true));
-            log.info("log message: {}", "Пользователь продолжил создание анкеты и записал gender.");
-            return sendMessage;
-        }
-        throw new RuntimeException("Ошибка: попытка внести в поле gender другой аргумент.");
-    }
-
-    public BotApiMethod<?> getUserName(Message message, Long longId) {
-        map.get(longId).setName(message.getText());
-        SendMessage sendMessage = new SendMessage(longId.toString(),
-                "Опишите себя. (При этом первая строка считается " +
-                        "Заголовком, все другие строки - Описанием," +
-                        " если строка только одна, то Заголовком считается первое слово)\n?");
-        log.info("log message: {}", "Пользователь продолжил создание анкеты и записал name.");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> getUserDescription(Message message, Long longId) {
-        map.get(longId).setDescription(message.getText());
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Кого вы ищите?");
-        sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboardSecondStageForForm());
-        log.info("log message: {}", "Пользователь продолжил создание анкеты и записал description.");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> getUserPreference(Message message, Long longId) {
-        if (message.getText().equals("Сударя") | message.getText().equals("Сударыню") |
-                message.getText().equals("Всех")) {
-            map.get(longId).setPreference(message.getText());
-
-            RestTemplate restTemplate = createRestTemplate();
-            Person person = map.get(longId);
-            HttpEntity<Person> httpEntity = new HttpEntity<>(person);
-            restTemplate.postForEntity("http://localhost:8686/server/person", httpEntity, String.class);
-            SendMessage sendMessage = new SendMessage(longId.toString(), "Поздравляем,вы заполнили анкету.");
-            map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
-            sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu
-                    ("Анкета", "Поиск", "Любимцы"));
-            log.info("log message: {}", "Пользователь завершил создание анкеты и записал preference и выполнил запрос" +
-                    " http://localhost:8686/server/person");
-            return sendMessage;
-        }
-        throw new RuntimeException("Ошибка: попытка внести в поле aim другой аргумент.");
-    }
-
+    /**
+     * Метод реализует работу бота при нажатии кнопки Поиск.
+     *
+     * @param longId -идентификатор пользователя.
+     */
     public BotApiMethod<?> getSearch(Long longId) {
         SendMessage sendMessage = new SendMessage();
-        RestTemplate restTemplate = createRestTemplate();
+        RestTemplate restTemplate = new Rest().createRestTemplate();
         ResponseEntity<PersonModel> response = restTemplate
                 .getForEntity("http://localhost:8686/server/person/{id}/show/lovers", PersonModel.class, longId);
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
@@ -117,18 +75,23 @@ public class MessageHandler {
         return sendMessage;
     }
 
+    /**
+     * Метод реализует работу бота при нажатии кнопки Любимцы.
+     *
+     * @param longId,message -идентификатор пользователя, сообщение от пользователя.
+     */
+
     public BotApiMethod<?> getFavorite(Message message, Long longId) {
         SendMessage sendMessage = new SendMessage();
-        RestTemplate restTemplate = createRestTemplate();
+        RestTemplate restTemplate = new Rest().createRestTemplate();
         ResponseEntity<PersonModel> response = restTemplate
                 .getForEntity("http://localhost:8686/server/{id}/preference/{action}", PersonModel.class, longId,
                         message.getText());
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
-
         Person lover = response.getBody().getLover();
         if (!lover.getName().equals("")) {
             sendMessage = new SendMessage
-                    (longId.toString(), lover.getGender() + " - " + lover.getName()+"\n"+response.getBody().getStatus());
+                    (longId.toString(), lover.getGender() + " - " + lover.getName() + "\n" + response.getBody().getStatus());
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
         } else {
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
@@ -140,9 +103,14 @@ public class MessageHandler {
         return sendMessage;
     }
 
+    /**
+     * Метод реализует работу бота при нажатии кнопки Анкета.
+     *
+     * @param longId -идентификатор пользователя.
+     */
     public BotApiMethod<?> getForm(Long longId) {
         try {
-            RestTemplate restTemplate = createRestTemplate();
+            RestTemplate restTemplate = new Rest().createRestTemplate();
             ResponseEntity<PersonModel> response =
                     restTemplate.getForEntity("http://localhost:8686/server/person/{id}",
                             PersonModel.class, longId);
@@ -161,20 +129,24 @@ public class MessageHandler {
         } catch (HttpServerErrorException error) {
             throw new RuntimeException("Пользователь пытался получить анкету, не создав её.");
         }
-
     }
 
+    /**
+     * Метод реализует работу бота при нажатии кнопки Влево.
+     *
+     * @param longId,message -идентификатор пользователя, сообщение от пользователя.
+     */
     public BotApiMethod<?> getLeft(Message message, Long longId) {
         SendMessage sendMessage = new SendMessage();
         if (map.get(longId).getBotState().equals(BotState.SHOW_FAVORITE)) {
-            RestTemplate restTemplate = createRestTemplate();
+            RestTemplate restTemplate = new Rest().createRestTemplate();
             ResponseEntity<PersonModel> response = restTemplate
                     .getForEntity("http://localhost:8686/server/{id}/preference/{action}", PersonModel.class, longId, message.getText());
             pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
 
             Person lover = response.getBody().getLover();
             if (!lover.getName().equals("")) {
-                sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName()+"\n"+response.getBody().getStatus());
+                sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName() + "\n" + response.getBody().getStatus());
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
             } else {
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
@@ -183,7 +155,7 @@ public class MessageHandler {
                     "http://localhost:8686/server/{id}/preference/{action}");
             return sendMessage;
         } else {
-            RestTemplate restTemplate = createRestTemplate();
+            RestTemplate restTemplate = new Rest().createRestTemplate();
             Person p = new Person();
             p.setId(longId);
             HttpEntity<Person> httpEntity = new HttpEntity<>(p);
@@ -204,17 +176,21 @@ public class MessageHandler {
         return sendMessage;
     }
 
+    /**
+     * Метод реализует работу бота при нажатии кнопки Вправо.
+     *
+     * @param longId,message -идентификатор пользователя, сообщение от пользователя.
+     */
     public BotApiMethod<?> getRight(Message message, Long longId) {
         SendMessage sendMessage = new SendMessage();
         if (map.get(longId).getBotState().equals(BotState.SHOW_FAVORITE)) {
-            RestTemplate restTemplate = createRestTemplate();
+            RestTemplate restTemplate = new Rest().createRestTemplate();
             ResponseEntity<PersonModel> response = restTemplate
                     .getForEntity("http://localhost:8686/server/{id}/preference/{action}", PersonModel.class, longId, message.getText());
             pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
             Person lover = response.getBody().getLover();
-
             if (!lover.getName().equals("")) {
-                sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName()+"\n"+response.getBody().getStatus());
+                sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName() + "\n" + response.getBody().getStatus());
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
             } else {
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
@@ -222,7 +198,7 @@ public class MessageHandler {
             log.info("log message: {}", "Пользователь нажал вправо в режиме любимцев и совершил запрос" +
                     "http://localhost:8686/server/{id}/preference/{action}");
         } else {
-            RestTemplate restTemplate = createRestTemplate();
+            RestTemplate restTemplate = new Rest().createRestTemplate();
             Person person = new Person();
             person.setId(longId);
             HttpEntity<Person> httpEntity = new HttpEntity<>(person);
@@ -230,6 +206,9 @@ public class MessageHandler {
                     .postForEntity("http://localhost:8686/server/person/like", httpEntity, PersonModel.class);
             pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
             Person lover = response.getBody().getLover();
+            if (!response.getBody().getStatus().isEmpty()) {
+                map.get(longId).setStatus(response.getBody().getStatus());
+            }
             if (!lover.getName().equals("")) {
                 sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName());
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
@@ -237,10 +216,14 @@ public class MessageHandler {
             log.info("log message: {}", "Пользователь нажал вправо в режиме поиска и совершил запрос" +
                     "http://localhost:8686/server/person/like");
         }
-
         return sendMessage;
     }
 
+    /**
+     * Метод реализует работу бота при нажатии кнопки Меню.
+     *
+     * @param longId -идентификатор пользователя.
+     */
     public BotApiMethod<?> getMenu(Long longId) {
         SendMessage sendMessage = new SendMessage(longId.toString(), "\n Используйте меню.");
         map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
@@ -249,11 +232,16 @@ public class MessageHandler {
         return sendMessage;
     }
 
+    /**
+     * Метод реализует работу бота при вводе команды "/continue".
+     *
+     * @param longId -идентификатор пользователя.
+     */
 
     public BotApiMethod<?> getContinue(Long longId) {
         SendMessage sendMessage;
         try {
-            RestTemplate restTemplate = createRestTemplate();
+            RestTemplate restTemplate = new Rest().createRestTemplate();
             ResponseEntity<PersonModel> response =
                     restTemplate.getForEntity("http://localhost:8686/server/person/{id}",
                             PersonModel.class, longId);
@@ -272,121 +260,29 @@ public class MessageHandler {
         return sendMessage;
     }
 
-    public BotApiMethod<?> getChangeFormFirstStage(Long longId) {
-        map.get(longId).setBotState(BotState.SHOW_CHANGES);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Укажите поле, которое хотите изменить.");
-        sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu
-                ("Пол", "Имя", "Описание", "Приоритет поиска"));
-        log.info("log message: {}", "Пользователь нажал кнопку изменить анкету");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> getChangeGenderSecondStage(Long longId) {
-        map.get(longId).setBotState(BotState.CHANGE_GENDER);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Вы сударь иль сударыня?");
-        sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboardFirstStageForForm());
-        log.info("log message: {}", "Пользователь выбрал поле gender для изменений.");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> getChangeNameSecondStage(Long longId) {
-        map.get(longId).setBotState(BotState.CHANGE_NAME);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Как вас зовут?");
-        sendMessage.setReplyMarkup(new ReplyKeyboardRemove(true));
-        log.info("log message: {}", "Пользователь выбрал поле name для изменений.");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> getChangeDescriptionSecondStage(Long longId) {
-        map.get(longId).setBotState(BotState.CHANGE_DESCRIPTION);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Опишите себя.");
-        sendMessage.setReplyMarkup(new ReplyKeyboardRemove(true));
-        log.info("log message: {}", "Пользователь выбрал поле description для изменений.");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> getChangePreferenceSecondStage(Long longId) {
-        map.get(longId).setBotState(BotState.CHANGE_PREFERENCE);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Кого вы ищите?");
-        sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboardSecondStageForForm());
-        log.info("log message: {}", "Пользователь выбрал поле preference для изменений.");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> addChangeGender(Message message, Long longId) {
-        if (message.getText().equals("Сударь") || message.getText().equals("Сударыня")) {
-            map.get(longId).setGender(message.getText());
-            RestTemplate restTemplate = createRestTemplate();
-            HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-            restTemplate.put("http://localhost:8686/server/update/person", person);
-            map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
-            SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
-            sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
-            log.info("log message: {}", "Пользователь изменил gender и выполнил запрос " +
-                    "http://localhost:8686/server/update/person");
-            return sendMessage;
-        } else {
-            throw new RuntimeException("Пользователь не внёс изменение.");
-        }
-    }
-
-    public BotApiMethod<?> addChangeName(Message message, Long longId) {
-        map.get(longId).setName(message.getText());
-        RestTemplate restTemplate = createRestTemplate();
-        HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-        restTemplate.put("http://localhost:8686/server/update/person", person);
-        map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
-        sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
-        log.info("log message: {}", "Пользователь изменил name и выполнил запрос " +
-                "http://localhost:8686/server/update/person");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> addChangeDescription(Message message, Long longId) {
-        map.get(longId).setDescription(message.getText());
-        RestTemplate restTemplate = createRestTemplate();
-        HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-        restTemplate.put("http://localhost:8686/server/update/person", person);
-        map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
-        sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
-        log.info("log message: {}", "Пользователь изменил description и выполнил запрос " +
-                "http://localhost:8686/server/update/person");
-        return sendMessage;
-    }
-
-    public BotApiMethod<?> addChangePreference(Message message, Long longId) {
-        if (message.getText().equals("Сударя") || message.getText().equals("Сударыню") || message.getText().equals("Всех")) {
-            map.get(longId).setPreference(message.getText());
-            RestTemplate restTemplate = createRestTemplate();
-            HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-            restTemplate.put("http://localhost:8686/server/update/person", person);
-            map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
-            SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
-            sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
-            log.info("log message: {}", "Пользователь изменил preference и выполнил запрос " +
-                    "http://localhost:8686/server/update/person");
-            return sendMessage;
-        } else {
-            throw new RuntimeException("Пользователь не внёс изменение.");
-        }
-    }
-
+    /**
+     * Метод реализует отправление картинки по запросу.
+     *
+     * @param longId -идентификатор пользователя.
+     */
     @SneakyThrows
-    public SendPhoto sendPhoto(long chatId) {
+    public SendPhoto sendPhoto(Long longId) {
         File image = ResourceUtils.getFile(pathRequest);
         SendPhoto sendPhoto = new SendPhoto();
         sendPhoto.setPhoto(new InputFile(image));
-        sendPhoto.setChatId(String.valueOf(chatId));
+        sendPhoto.setChatId(String.valueOf(longId));
         return sendPhoto;
     }
 
-    private RestTemplate createRestTemplate() {
-        HttpClient httpClient = HttpClientBuilder.create().build();
-        ClientHttpRequestFactory client = new HttpComponentsClientHttpRequestFactory(httpClient);
-        return new RestTemplate(client);
+    /**
+     * Метод реализует получение статуса пользователя по запросу.
+     *
+     * @param longId -идентификатор пользователя.
+     */
+    public SendMessage sendStatus(Long longId) {
+        SendMessage sendMessage = new SendMessage(longId.toString(), map.get(longId).getStatus());
+        map.get(longId).setStatus("");
+
+        return sendMessage;
     }
-
-
 }

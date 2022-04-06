@@ -78,7 +78,7 @@ public class Lover {
     }
 
     private LoverModel getLoverEmptyModel() {
-        LoverModel empty = new LoverModel(0L, " ", " ", "Здесь никого нет", "");
+        LoverModel empty = new LoverModel(0L, " ", " ", "Увы.\nАнкеты кончились.", "");
         return empty;
     }
 

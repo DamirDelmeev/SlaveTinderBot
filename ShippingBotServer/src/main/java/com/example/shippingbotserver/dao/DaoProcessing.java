@@ -60,7 +60,6 @@ public class DaoProcessing {
         FormLoverModel formLoverModel = new FormLoverModel(res);
         formLoverModel.initBytes();
         formLoverModel.setStatus(status);
-        System.out.println(status);
         return formLoverModel;
     }
 
@@ -89,6 +88,10 @@ public class DaoProcessing {
             return new FormLoverModel(new Lover(loverModel));
         }
         lover.getLike().add(loverModel);
+        String status = "";
+        if (getLoverModelStatus(lover, loverModel).equals("Взаимность")) {
+            status = "Вы любимы: " + loverModel.getGender() + ", " + loverModel.getName();
+        }
         repository.save(lover);
         loverModel = showMe(lover);
         Lover res = new Lover(loverModel);
@@ -97,6 +100,7 @@ public class DaoProcessing {
         formHandler.meth();
         FormLoverModel formLoverModel = new FormLoverModel(new Lover(loverModel));
         formLoverModel.initBytes();
+        formLoverModel.setStatus(status);
         return formLoverModel;
     }
 
@@ -123,11 +127,11 @@ public class DaoProcessing {
     private String getLoverModelStatus(Lover me, LoverModel show) {
         String nameOfLoverModel = show.getName();
         if (me.mutuallyLovers().contains(show)) {
-            return "Взаимность";
+            return "Статус пользователя: взаимность.";
         } else if (me.getLikeMe().contains(show)) {
-            return "Вы любимъ";
+            return "Статус пользователя: вы любимы.";
         } else if (me.getLike().contains(show)) {
-            return "Любимъ вами";
+            return "Статус пользователя: любим вами.";
         }
         return "";
     }
@@ -140,7 +144,7 @@ public class DaoProcessing {
                 .filter(l -> isPreference(new LoverModel(lover), l))
                 .count();
         if (likeOfLover.size() == count) {
-            return new LoverModel(-1L, "", "", "Здесь никого нет", "");
+            return new LoverModel(-1L, "", "", "Увы.\nАнкеты кончились.", "");
         }
         listOfLovers = listOfLovers.stream()
                 .filter(l -> !Objects.equals(l.getId(), lover.getId()))
@@ -149,7 +153,7 @@ public class DaoProcessing {
                 .filter(l -> isPreference(new LoverModel(lover), l))
                 .collect(Collectors.toList());
         if (listOfLovers.isEmpty()) {
-            return new LoverModel(-1L, "", "", "Здесь никого нет", "");
+            return new LoverModel(-1L, "", "", "Увы.\nАнкеты кончились.", "");
         }
         return listOfLovers.get(0);
     }

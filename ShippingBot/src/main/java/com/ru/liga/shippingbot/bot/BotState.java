@@ -10,5 +10,4 @@ public enum BotState {
     CHANGE_GENDER,
     CHANGE_DESCRIPTION,
     CHANGE_PREFERENCE
-
 }

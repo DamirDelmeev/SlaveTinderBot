@@ -17,4 +17,5 @@ public class Person {
     String description;
     String preference;
     BotState botState;
+    String status;
 }

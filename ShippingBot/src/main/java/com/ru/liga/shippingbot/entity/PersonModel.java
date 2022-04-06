@@ -19,10 +19,6 @@ public class PersonModel {
     Person lover;
     String status;
 
-    public PersonModel(Person lover) {
-        this.lover = lover;
-    }
-
     public String writeToPicture() {
         if (bytesFromFile != null) {
             writeToFile();
