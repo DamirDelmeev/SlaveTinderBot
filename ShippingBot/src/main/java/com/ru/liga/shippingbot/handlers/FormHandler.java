@@ -76,9 +76,7 @@ public class FormHandler {
     public BotApiMethod<?> getUserName(Message message, Long longId) {
         map.get(longId).setName(message.getText());
         SendMessage sendMessage = new SendMessage(longId.toString(),
-                "Опишите себя. (При этом первая строка считается " +
-                        "Заголовком, все другие строки - Описанием," +
-                        " если строка только одна, то Заголовком считается первое слово)\n?");
+                "Опишите себя.");
         log.info("log message: {}", "Пользователь продолжил создание анкеты и записал name.");
         return sendMessage;
     }

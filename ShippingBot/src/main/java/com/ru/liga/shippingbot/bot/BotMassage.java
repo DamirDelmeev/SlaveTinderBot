@@ -5,6 +5,7 @@ import com.ru.liga.shippingbot.entity.Person;
 import com.ru.liga.shippingbot.handlers.ChangeHandler;
 import com.ru.liga.shippingbot.handlers.FormHandler;
 import com.ru.liga.shippingbot.handlers.MessageHandler;
+import com.vdurmont.emoji.EmojiParser;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -123,19 +124,33 @@ public class BotMassage extends SpringWebhookBot {
             }
             if (update.getMessage().getText().equals("Вправо")) {
                 BotApiMethod<?> right = messageHandler.getRight(update.getMessage(), update.getMessage().getFrom().getId());
+                getPhoto(update);
+                return right;
+            }
+            String like = EmojiParser.parseToUnicode(":hearts:");
+            if (update.getMessage().getText().equals(like) & map.get(update.getMessage().getFrom().getId()).getBotState().equals(BotState.SHOW_SEARCH)) {
+                BotApiMethod<?> likeForm = messageHandler.getLike(update.getMessage(),
+                        update.getMessage().getFrom().getId());
                 if (map.get(update.getMessage().getFrom().getId()).getStatus() != null
                         && !map.get(update.getMessage().getFrom().getId()).getStatus().isEmpty()) {
                     writeStatus(update);
                 }
                 getPhoto(update);
-                return right;
+                return likeForm;
+            }
+            String disLike = EmojiParser.parseToUnicode(":heavy_multiplication_x:");
+            if (update.getMessage().getText().equals(disLike)
+                    & map.get(update.getMessage().getFrom().getId()).getBotState().equals(BotState.SHOW_SEARCH)) {
+                BotApiMethod<?> disLikeForm = messageHandler.getDislike
+                        (update.getMessage(), update.getMessage().getFrom().getId());
+                getPhoto(update);
+                return disLikeForm;
             }
             if (update.getMessage().getText().equals("Меню")) {
                 return messageHandler.getMenu(update.getMessage().getFrom().getId());
             }
             return addChanges(update);
         }
-
     }
 
     /**
@@ -144,7 +159,7 @@ public class BotMassage extends SpringWebhookBot {
      *
      * @param update сообщение любого типа.
      */
-    public BotApiMethod<?> createForm(Update update) {
+    private BotApiMethod<?> createForm(Update update) {
         if (update.getMessage() == null) {
             return new SendMessage();
         }
@@ -182,7 +197,7 @@ public class BotMassage extends SpringWebhookBot {
      *
      * @param update сообщение любого типа.
      */
-    public BotApiMethod<?> getChoose(Update update) {
+    private BotApiMethod<?> getChoose(Update update) {
         BotState botState = messageHandler.getMap().get(update.getMessage().getFrom().getId()).getBotState();
         if (botState != null & (update.getMessage().getText()).equals("Изменить анкету")) {
             return changeHandler.getChangeFormFirstStage(update.getMessage().getFrom().getId());
