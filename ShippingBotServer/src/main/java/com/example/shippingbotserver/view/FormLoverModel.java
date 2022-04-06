@@ -1,6 +1,7 @@
 package com.example.shippingbotserver.view;
 
 import com.example.shippingbotserver.entity.Lover;
+import com.example.shippingbotserver.model.LoverModel;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,14 @@ public class FormLoverModel {
         status = "";
     }
 
+    public FormLoverModel(LoverModel loverModel) {
+        lover.setId(loverModel.getId());
+        lover.setName(loverModel.getName());
+        lover.setGender(loverModel.getGender());
+        lover.setDescription(loverModel.getDescription());
+        lover.setPreference(loverModel.getPreference());
+        status = "";
+    }
 
     public void initBytes() throws IOException {
         bytesFromFile = Files.readAllBytes(Paths.get(pathWrite));

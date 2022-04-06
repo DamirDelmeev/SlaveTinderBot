@@ -116,12 +116,12 @@ public class ChangeHandler {
             map.get(longId).setGender(message.getText());
             RestTemplate restTemplate = new Rest().createRestTemplate();
             HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-            restTemplate.put("http://localhost:8686/server/update/person", person);
+            restTemplate.put("http://localhost:7676/server/update/person", person);
             map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
             SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
             log.info("log message: {}", "Пользователь изменил gender и выполнил запрос " +
-                    "http://localhost:8686/server/update/person");
+                    "http://localhost:7676/server/update/person");
             return sendMessage;
         } else {
             throw new RuntimeException("Пользователь не внёс изменение.");
@@ -137,12 +137,12 @@ public class ChangeHandler {
         map.get(longId).setName(message.getText());
         RestTemplate restTemplate = new Rest().createRestTemplate();
         HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-        restTemplate.put("http://localhost:8686/server/update/person", person);
+        restTemplate.put("http://localhost:7676/server/update/person", person);
         map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
         sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
         log.info("log message: {}", "Пользователь изменил name и выполнил запрос " +
-                "http://localhost:8686/server/update/person");
+                "http://localhost:7676/server/update/person");
         return sendMessage;
     }
 
@@ -155,12 +155,12 @@ public class ChangeHandler {
         map.get(longId).setDescription(message.getText());
         RestTemplate restTemplate = new Rest().createRestTemplate();
         HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-        restTemplate.put("http://localhost:8686/server/update/person", person);
+        restTemplate.put("http://localhost:7676/server/update/person", person);
         map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
         sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
         log.info("log message: {}", "Пользователь изменил description и выполнил запрос " +
-                "http://localhost:8686/server/update/person");
+                "http://localhost:7676/server/update/person");
         return sendMessage;
     }
 
@@ -174,12 +174,12 @@ public class ChangeHandler {
             map.get(longId).setPreference(message.getText());
             RestTemplate restTemplate = new Rest().createRestTemplate();
             HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-            restTemplate.put("http://localhost:8686/server/update/person", person);
+            restTemplate.put("http://localhost:7676/server/update/person", person);
             map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
             SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
             log.info("log message: {}", "Пользователь изменил preference и выполнил запрос " +
-                    "http://localhost:8686/server/update/person");
+                    "http://localhost:7676/server/update/person");
             return sendMessage;
         } else {
             throw new RuntimeException("Пользователь не внёс изменение.");

@@ -143,6 +143,19 @@ public class TextEditor {
         return moveN(stringBuilder.toString());
     }
 
+    private boolean isLenDefault(String sentence, int lenDefault) {
+        int count = 0;
+        for (int i = 0; i < sentence.length(); i++) {
+            if (sentence.charAt(i) == '\n') {
+                count = 0;
+                continue;
+            }
+            if (++count > lenDefault)
+                return false;
+        }
+        return true;
+    }
+
     private String charAdd(String s, char ch, int pos) {
         StringBuilder stringBuilder = new StringBuilder();
         if (pos >= s.length()) {

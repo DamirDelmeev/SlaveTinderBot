@@ -4,105 +4,117 @@ import com.example.shippingbotserver.entity.Lover;
 import com.example.shippingbotserver.model.LoverModel;
 import com.example.shippingbotserver.repository.LoverModelRepository;
 import com.example.shippingbotserver.repository.LoverRepository;
+import com.example.shippingbotserver.utils.LoverShower;
 import com.example.shippingbotserver.view.FormHandler;
 import com.example.shippingbotserver.view.FormLoverModel;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class DaoProcessing {
     private final LoverRepository repository;
     private final LoverModelRepository modelRepository;
     private final FormHandler formHandler;
+    private final LoverShower shower;
 
-    public DaoProcessing(LoverRepository repository, LoverModelRepository modelRepository, FormHandler formHandler) {
+    @Autowired
+    public DaoProcessing(LoverRepository repository, LoverModelRepository modelRepository, FormHandler formHandler, LoverShower shower) {
         this.repository = repository;
         this.modelRepository = modelRepository;
         this.formHandler = formHandler;
+        this.shower = shower;
     }
 
-    public FormLoverModel findLoverById(Long request) throws IOException {
+    public FormLoverModel findLoverById(Long request) {
         Lover person = repository.findById(request).get();
-        formHandler.init(person);
-        formHandler.meth();
+        log.debug("log message{}", "person was received: " + person);
+        drawPicture(person);
+        log.debug("log message{}", "image was draw");
         person.setName(formHandler.getName());
         FormLoverModel form = new FormLoverModel(person);
-        form.initBytes();
+        shower.formInit(form);
         return form;
     }
 
-    public FormLoverModel getQuestionnaire(Long id) throws IOException {
+    public FormLoverModel getQuestionnaire(Long id){
         Lover lover = repository.findById(id).get();
-        LoverModel loverModel = showMe(lover);
-        formHandler.init(new Lover(loverModel));
-        formHandler.meth();
+        log.debug("log message{}", "person was received: " + lover);
+        LoverModel loverModel = shower.showMe(lover, modelRepository, repository);
+        drawPicture(new Lover(loverModel));
+        log.debug("log message{}", "image was draw");
         Lover res = new Lover(loverModel);
         res.setName(formHandler.getName());
         FormLoverModel formLoverModel = new FormLoverModel(res);
-        formLoverModel.initBytes();
+        shower.formInit(formLoverModel);
         return formLoverModel;
     }
 
-    public FormLoverModel getFavorite(Long id, String action) throws IOException {
+    public FormLoverModel getFavorite(Long id, String action){
         boolean increment = action.equalsIgnoreCase("Вправо");
         Lover lover = repository.findById(id).get();
+        log.debug("log message{}", "person was received: " + lover);
         LoverModel favorite = lover.getLover(increment);
-        String status = getLoverModelStatus(lover, favorite);
+        String status = shower.getLoverModelStatus(lover, favorite);
         repository.save(lover);
-        formHandler.init(new Lover(favorite));
-        formHandler.meth();
+        log.debug("log message{}", "person was updated");
+        drawPicture(new Lover(favorite));
         Lover res = new Lover(favorite);
         res.setName(formHandler.getName());
         FormLoverModel formLoverModel = new FormLoverModel(res);
-        formLoverModel.initBytes();
+        try{
+            formLoverModel.initBytes();
+        }catch (Exception ignored){
+        }
         formLoverModel.setStatus(status);
         return formLoverModel;
     }
 
-    public FormLoverModel dislike(Lover id) throws IOException {
+    public FormLoverModel dislike(Lover id){
         Lover lover = repository.findById(id.getId()).get();
-        LoverModel loverModel = showMe(lover);
+        log.debug("log message{}", "person was received: " + lover);
+        LoverModel loverModel = shower.showMe(lover, modelRepository, repository);
         if (Objects.equals(loverModel.getId(), -1L)) {
             return new FormLoverModel(new Lover(loverModel));
         }
         lover.getDislikes().add(loverModel);
         repository.save(lover);
-        loverModel = showMe(lover);
+        log.debug("log message{}", "person was disliked" + loverModel);
+        log.debug("log message{}", "person was updated");
+        loverModel = shower.showMe(lover, modelRepository, repository);
+        log.debug("log message{}", "Next person was received" + loverModel);
         Lover res = new Lover(loverModel);
         res.setName(formHandler.getName());
-        formHandler.init(res);
-        formHandler.meth();
-        FormLoverModel formLoverModel = new FormLoverModel(new Lover(loverModel));
-        formLoverModel.initBytes();
+        FormLoverModel formLoverModel = getFormLoverModel(loverModel, "", res);
         return formLoverModel;
     }
 
-    public FormLoverModel like(Lover id) throws IOException {
+    public FormLoverModel like(Lover id) {
         Lover lover = repository.findById(id.getId()).get();
-        LoverModel loverModel = showMe(lover);
+        log.debug("log message{}", "person was received: " + lover);
+        LoverModel loverModel = shower.showMe(lover, modelRepository, repository);
         if (Objects.equals(loverModel.getId(), -1L)) {
             return new FormLoverModel(new Lover(loverModel));
         }
         lover.getLike().add(loverModel);
         String status = "";
-        if (getLoverModelStatus(lover, loverModel).equals("Взаимность")) {
-            status = "Вы любимы: " + loverModel.getGender() + ", " + loverModel.getName();
+        if (shower.getLoverModelStatus(lover, loverModel).equals("Взаимность")){
+            status = "Вы любимы: " + shower.translateLover(loverModel.getGender()) + ", " + loverModel.getName();
         }
         repository.save(lover);
-        loverModel = showMe(lover);
+        log.debug("log message{}", "person was liked" + loverModel);
+        log.debug("log message{}", "person was updated");
+        loverModel = shower.showMe(lover, modelRepository, repository);
+        log.debug("log message{}", "Next person was received" + loverModel);
         Lover res = new Lover(loverModel);
         res.setName(formHandler.getName());
-        formHandler.init(res);
-        formHandler.meth();
-        FormLoverModel formLoverModel = new FormLoverModel(new Lover(loverModel));
-        formLoverModel.initBytes();
-        formLoverModel.setStatus(status);
+        FormLoverModel formLoverModel = getFormLoverModel(loverModel, status, res);
         return formLoverModel;
     }
+
 
     public void saveLover(Lover person) {
         if (person.getGender().equals("Сударь")) {
@@ -118,69 +130,37 @@ public class DaoProcessing {
             person.setPreference("girl");
         }
         repository.save(person);
+        log.debug("log message{}", "person was saved");
     }
 
     public void deleteLover(Long id) {
-        repository.delete(repository.findById(id).get());
+        Lover lover = repository.findById(id).get();
+        log.debug("log message{}", "person was received: " + lover);
+        repository.delete(lover);
+        log.debug("log message{}", "person was deleted");
     }
 
-    private String getLoverModelStatus(Lover me, LoverModel show) {
-        String nameOfLoverModel = show.getName();
-        if (me.mutuallyLovers().contains(show)) {
-            return "Статус пользователя: взаимность.";
-        } else if (me.getLikeMe().contains(show)) {
-            return "Статус пользователя: вы любимы.";
-        } else if (me.getLike().contains(show)) {
-            return "Статус пользователя: любим вами.";
-        }
-        return "";
-    }
-
-    private LoverModel showMe(Lover lover) {
-        List<LoverModel> listOfLovers = modelRepository.findAll();
-        List<LoverModel> likeOfLover = listOfLovers.stream().filter(l -> lover.getLike().contains(l)).collect(Collectors.toList());
-        long count = listOfLovers.stream()
-                .filter(l -> !Objects.equals(l.getId(), lover.getId()))
-                .filter(l -> isPreference(new LoverModel(lover), l))
-                .count();
-        if (likeOfLover.size() == count) {
-            return new LoverModel(-1L, "", "", "Увы.\nАнкеты кончились.", "");
-        }
-        listOfLovers = listOfLovers.stream()
-                .filter(l -> !Objects.equals(l.getId(), lover.getId()))
-                .filter(l -> !lover.getDislikes().contains(l))
-                .filter(l -> !lover.getLike().contains(l))
-                .filter(l -> isPreference(new LoverModel(lover), l))
-                .collect(Collectors.toList());
-        if (listOfLovers.isEmpty()) {
-            return new LoverModel(-1L, "", "", "Увы.\nАнкеты кончились.", "");
-        }
-        return listOfLovers.get(0);
-    }
 
     public void update(Lover lover) {
         Lover orig = repository.findById(lover.getId()).get();
-        lover.setDislikes(orig.getDislikes());
-        lover.setLike(orig.getLike());
-        lover.setLikeMe(orig.getLikeMe());
-        if (lover.getGender().equals("Сударь")) {
-            lover.setGender("boy");
-        } else {
-            lover.setGender("girl");
-        }
-        if (lover.getPreference().equals("Сударя")) {
-            lover.setPreference("boy");
-        }
-        if (lover.getPreference().equals("Сударыню")) {
-            lover.setPreference("girl");
-        } else {
-            lover.setPreference("all");
-        }
+        log.debug("log message{}", "person was received: " + orig);
+        shower.loverUpdate(lover, orig);
         repository.save(lover);
+        log.debug("log message{}", "person was updated: " + lover);
     }
 
-    private boolean isPreference(LoverModel one, LoverModel two) {
-        return (one.getPreference().equals("all") || one.getPreference().equals(two.getGender())) &&
-                (two.getPreference().equals("all") || two.getPreference().equals(one.getGender()));
+    private FormLoverModel getFormLoverModel(LoverModel loverModel, String status, Lover res) {
+        drawPicture(res);
+        FormLoverModel formLoverModel = new FormLoverModel(new Lover(loverModel));
+        shower.formInit(formLoverModel);
+        formLoverModel.setStatus(status);
+        return formLoverModel;
     }
+
+    private void drawPicture(Lover res) {
+        formHandler.init(res);
+        formHandler.meth();
+        log.debug("log message{}", "image was draw");
+    }
+
 }

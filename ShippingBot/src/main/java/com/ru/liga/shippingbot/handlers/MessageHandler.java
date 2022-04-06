@@ -62,7 +62,7 @@ public class MessageHandler {
         SendMessage sendMessage = new SendMessage();
         RestTemplate restTemplate = new Rest().createRestTemplate();
         ResponseEntity<PersonModel> response = restTemplate
-                .getForEntity("http://localhost:8686/server/person/{id}/show/lovers", PersonModel.class, longId);
+                .getForEntity("http://localhost:7676/server/person/{id}/show/lovers", PersonModel.class, longId);
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
         Person lover = response.getBody().getLover();
         if (!lover.getName().equals("")) {
@@ -71,7 +71,7 @@ public class MessageHandler {
         map.get(longId).setBotState(BotState.SHOW_SEARCH);
         sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
         log.info("log message: {}", "Пользователь нажал поиск и совершил запрос" +
-                "http://localhost:8686/server/person/{id}/show/lovers");
+                "http://localhost:7676/server/person/{id}/show/lovers");
         return sendMessage;
     }
 
@@ -85,7 +85,7 @@ public class MessageHandler {
         SendMessage sendMessage = new SendMessage();
         RestTemplate restTemplate = new Rest().createRestTemplate();
         ResponseEntity<PersonModel> response = restTemplate
-                .getForEntity("http://localhost:8686/server/{id}/preference/{action}", PersonModel.class, longId,
+                .getForEntity("http://localhost:7676/server/{id}/preference/{action}", PersonModel.class, longId,
                         message.getText());
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
         Person lover = response.getBody().getLover();
@@ -99,7 +99,7 @@ public class MessageHandler {
         map.get(longId).setBotState(BotState.SHOW_FAVORITE);
 
         log.info("log message: {}", "Пользователь нажал любимцы и совершил запрос" +
-                "http://localhost:8686/server/{id}/preference/{action}");
+                "http://localhost:7676/server/{id}/preference/{action}");
         return sendMessage;
     }
 
@@ -112,7 +112,7 @@ public class MessageHandler {
         try {
             RestTemplate restTemplate = new Rest().createRestTemplate();
             ResponseEntity<PersonModel> response =
-                    restTemplate.getForEntity("http://localhost:8686/server/person/{id}",
+                    restTemplate.getForEntity("http://localhost:7676/server/person/{id}",
                             PersonModel.class, longId);
 
             map.put(longId, Objects.requireNonNull(response.getBody()).getLover());
@@ -124,7 +124,7 @@ public class MessageHandler {
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu
                     ("Изменить анкету", "Поиск", "Любимцы"));
             log.info("log message: {}", "Пользователь нажал анкета и совершил запрос" +
-                    "http://localhost:8686/server/person/{id}");
+                    "http://localhost:7676/server/person/{id}");
             return sendMessage;
         } catch (HttpServerErrorException error) {
             throw new RuntimeException("Пользователь пытался получить анкету, не создав её.");
@@ -141,7 +141,7 @@ public class MessageHandler {
         if (map.get(longId).getBotState().equals(BotState.SHOW_FAVORITE)) {
             RestTemplate restTemplate = new Rest().createRestTemplate();
             ResponseEntity<PersonModel> response = restTemplate
-                    .getForEntity("http://localhost:8686/server/{id}/preference/{action}", PersonModel.class, longId, message.getText());
+                    .getForEntity("http://localhost:7676/server/{id}/preference/{action}", PersonModel.class, longId, message.getText());
             pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
 
             Person lover = response.getBody().getLover();
@@ -152,7 +152,7 @@ public class MessageHandler {
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
             }
             log.info("log message: {}", "Пользователь нажал влево в режиме любимцев и совершил запрос" +
-                    "http://localhost:8686/server/{id}/preference/{action}");
+                    "http://localhost:7676/server/{id}/preference/{action}");
             return sendMessage;
         } else {
             RestTemplate restTemplate = new Rest().createRestTemplate();
@@ -160,7 +160,7 @@ public class MessageHandler {
             p.setId(longId);
             HttpEntity<Person> httpEntity = new HttpEntity<>(p);
             ResponseEntity<PersonModel> response = restTemplate
-                    .postForEntity("http://localhost:8686/server/person/dislike", httpEntity, PersonModel.class);
+                    .postForEntity("http://localhost:7676/server/person/dislike", httpEntity, PersonModel.class);
             pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
             Person lover = response.getBody().getLover();
             if (!lover.getName().equals("")) {
@@ -170,7 +170,7 @@ public class MessageHandler {
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
             }
             log.info("log message: {}", "Пользователь нажал влево в режиме поиска и совершил запрос" +
-                    "http://localhost:8686/server/person/dislike");
+                    "http://localhost:7676/server/person/dislike");
         }
 
         return sendMessage;
@@ -186,7 +186,7 @@ public class MessageHandler {
         if (map.get(longId).getBotState().equals(BotState.SHOW_FAVORITE)) {
             RestTemplate restTemplate = new Rest().createRestTemplate();
             ResponseEntity<PersonModel> response = restTemplate
-                    .getForEntity("http://localhost:8686/server/{id}/preference/{action}", PersonModel.class, longId, message.getText());
+                    .getForEntity("http://localhost:7676/server/{id}/preference/{action}", PersonModel.class, longId, message.getText());
             pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
             Person lover = response.getBody().getLover();
             if (!lover.getName().equals("")) {
@@ -196,14 +196,14 @@ public class MessageHandler {
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
             }
             log.info("log message: {}", "Пользователь нажал вправо в режиме любимцев и совершил запрос" +
-                    "http://localhost:8686/server/{id}/preference/{action}");
+                    "http://localhost:7676/server/{id}/preference/{action}");
         } else {
             RestTemplate restTemplate = new Rest().createRestTemplate();
             Person person = new Person();
             person.setId(longId);
             HttpEntity<Person> httpEntity = new HttpEntity<>(person);
             ResponseEntity<PersonModel> response = restTemplate
-                    .postForEntity("http://localhost:8686/server/person/like", httpEntity, PersonModel.class);
+                    .postForEntity("http://localhost:7676/server/person/like", httpEntity, PersonModel.class);
             pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
             Person lover = response.getBody().getLover();
             if (!response.getBody().getStatus().isEmpty()) {
@@ -214,7 +214,7 @@ public class MessageHandler {
                 sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
             }
             log.info("log message: {}", "Пользователь нажал вправо в режиме поиска и совершил запрос" +
-                    "http://localhost:8686/server/person/like");
+                    "http://localhost:7676/server/person/like");
         }
         return sendMessage;
     }
@@ -243,7 +243,7 @@ public class MessageHandler {
         try {
             RestTemplate restTemplate = new Rest().createRestTemplate();
             ResponseEntity<PersonModel> response =
-                    restTemplate.getForEntity("http://localhost:8686/server/person/{id}",
+                    restTemplate.getForEntity("http://localhost:7676/server/person/{id}",
                             PersonModel.class, longId);
             Person lover = Objects.requireNonNull(response.getBody()).getLover();
             map.put(longId, lover);
@@ -256,7 +256,7 @@ public class MessageHandler {
             throw new RuntimeException("Пользователь пытался получить анкету не создав её");
         }
         log.info("log message: {}", "Пользователь ввёл /continue совершил запрос" +
-                "http://localhost:8686/server/person/{id}");
+                "http://localhost:7676/server/person/{id}");
         return sendMessage;
     }
 

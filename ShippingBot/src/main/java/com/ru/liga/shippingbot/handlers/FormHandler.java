@@ -109,14 +109,14 @@ public class FormHandler {
             RestTemplate restTemplate = new Rest().createRestTemplate();
             Person person = map.get(longId);
             HttpEntity<Person> httpEntity = new HttpEntity<>(person);
-            restTemplate.postForEntity("http://localhost:8686/server/person", httpEntity, String.class);
+            restTemplate.postForEntity("http://localhost:7676/server/person", httpEntity, String.class);
 
             SendMessage sendMessage = new SendMessage(longId.toString(), "Поздравляем,вы заполнили анкету.");
             map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu
                     ("Анкета", "Поиск", "Любимцы"));
             log.info("log message: {}", "Пользователь завершил создание анкеты и записал preference и выполнил запрос" +
-                    " http://localhost:8686/server/person");
+                    " http://localhost:7676/server/person");
             return sendMessage;
         }
         throw new RuntimeException("Ошибка: попытка внести в поле aim другой аргумент.");
