@@ -4,7 +4,7 @@ package com.ru.liga.shippingbot.handlers;
 import com.ru.liga.shippingbot.bot.BotState;
 import com.ru.liga.shippingbot.entity.Person;
 import com.ru.liga.shippingbot.entity.PersonModel;
-import com.ru.liga.shippingbot.handlers.template.Rest;
+import com.ru.liga.shippingbot.handlers.template.RequestRunner;
 import com.ru.liga.shippingbot.keyboard.ReplyKeyboardMaker;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.Getter;
@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -49,6 +48,13 @@ public class MessageHandler {
      */
     Map<Long, Person> map;
 
+    RequestRunner requestRunner;
+
+    @Autowired
+    public MessageHandler(RequestRunner requestRunner) {
+        this.requestRunner = requestRunner;
+    }
+
     @Autowired
     public void setMap(Map<Long, Person> map) {
         this.map = map;
@@ -60,12 +66,11 @@ public class MessageHandler {
      * @param longId -идентификатор пользователя.
      */
     public BotApiMethod<?> getSearch(Long longId) {
-        SendMessage sendMessage = new SendMessage();
-        RestTemplate restTemplate = new Rest().createRestTemplate();
-        ResponseEntity<PersonModel> response = restTemplate
-                .getForEntity("http://localhost:7676/server/person/{id}/show/lovers", PersonModel.class, longId);
+        ResponseEntity<PersonModel> response = requestRunner.runnerSearch(longId);
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
         Person lover = response.getBody().getLover();
+
+        SendMessage sendMessage = new SendMessage();
         if (!lover.getName().equals("")) {
             sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName());
         }
@@ -74,8 +79,6 @@ public class MessageHandler {
         String disLike = EmojiParser.parseToUnicode(":heavy_multiplication_x:");
 
         sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu(disLike, "Меню", like));
-        log.info("log message: {}", "Пользователь нажал поиск и совершил запрос" +
-                "http://localhost:7676/server/person/{id}/show/lovers");
         return sendMessage;
     }
 
@@ -87,10 +90,7 @@ public class MessageHandler {
 
     public BotApiMethod<?> getFavorite(Message message, Long longId) {
         SendMessage sendMessage = new SendMessage();
-        RestTemplate restTemplate = new Rest().createRestTemplate();
-        ResponseEntity<PersonModel> response = restTemplate
-                .getForEntity("http://localhost:7676/server/{id}/preference/{action}", PersonModel.class, longId,
-                        message.getText());
+        ResponseEntity<PersonModel> response = requestRunner.runnerGetFavorite(message, longId);
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
         Person lover = response.getBody().getLover();
         if (!lover.getName().equals("")) {
@@ -101,9 +101,6 @@ public class MessageHandler {
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
         }
         map.get(longId).setBotState(BotState.SHOW_FAVORITE);
-
-        log.info("log message: {}", "Пользователь нажал любимцы и совершил запрос" +
-                "http://localhost:7676/server/{id}/preference/{action}");
         return sendMessage;
     }
 
@@ -114,11 +111,7 @@ public class MessageHandler {
      */
     public BotApiMethod<?> getForm(Long longId) {
         try {
-            RestTemplate restTemplate = new Rest().createRestTemplate();
-            ResponseEntity<PersonModel> response =
-                    restTemplate.getForEntity("http://localhost:7676/server/person/{id}",
-                            PersonModel.class, longId);
-
+            ResponseEntity<PersonModel> response = requestRunner.runnerGetForm(longId);
             map.put(longId, Objects.requireNonNull(response.getBody()).getLover());
             pathRequest = response.getBody().writeToPicture();
 
@@ -127,8 +120,6 @@ public class MessageHandler {
             map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu
                     ("Изменить анкету", "Поиск", "Любимцы"));
-            log.info("log message: {}", "Пользователь нажал анкета и совершил запрос" +
-                    "http://localhost:7676/server/person/{id}");
             return sendMessage;
         } catch (HttpServerErrorException error) {
             throw new RuntimeException("Пользователь пытался получить анкету, не создав её.");
@@ -141,22 +132,17 @@ public class MessageHandler {
      * @param longId,message -идентификатор пользователя, сообщение от пользователя.
      */
     public BotApiMethod<?> getLeft(Message message, Long longId) {
-        SendMessage sendMessage = new SendMessage();
-
-        RestTemplate restTemplate = new Rest().createRestTemplate();
-        ResponseEntity<PersonModel> response = restTemplate
-                .getForEntity("http://localhost:7676/server/{id}/preference/{action}", PersonModel.class, longId, message.getText());
+        ResponseEntity<PersonModel> response = requestRunner.runnerGetLeftFavorite(message, longId);
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
-
         Person lover = response.getBody().getLover();
+
+        SendMessage sendMessage = new SendMessage();
         if (!lover.getName().equals("")) {
             sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName() + "\n" + response.getBody().getStatus());
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
         } else {
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
         }
-        log.info("log message: {}", "Пользователь нажал влево в режиме любимцев и совершил запрос" +
-                "http://localhost:7676/server/{id}/preference/{action}");
         return sendMessage;
 
     }
@@ -164,30 +150,25 @@ public class MessageHandler {
     /**
      * Метод реализует работу бота при нажатии кнопки dislike.
      *
-     * @param longId,message -идентификатор пользователя, сообщение от пользователя.
+     * @param longId -идентификатор пользователя, сообщение от пользователя.
      */
 
-    public BotApiMethod<?> getDislike(Message message, Long longId) {
+    public BotApiMethod<?> getDislike(Long longId) {
         SendMessage sendMessage = new SendMessage();
-        RestTemplate restTemplate = new Rest().createRestTemplate();
         Person p = new Person();
         p.setId(longId);
         HttpEntity<Person> httpEntity = new HttpEntity<>(p);
-        ResponseEntity<PersonModel> response = restTemplate
-                .postForEntity("http://localhost:7676/server/person/dislike", httpEntity, PersonModel.class);
+        ResponseEntity<PersonModel> response = requestRunner.runnerGetDislike(httpEntity);
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
         Person lover = response.getBody().getLover();
         if (!lover.getName().equals("")) {
             sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName());
             String like = EmojiParser.parseToUnicode(":hearts:");
             String disLike = EmojiParser.parseToUnicode(":heavy_multiplication_x:");
-
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu(disLike, "Меню", like));
         } else {
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
         }
-        log.info("log message: {}", "Пользователь нажал влево в режиме поиска и совершил запрос" +
-                "http://localhost:7676/server/person/dislike");
         return sendMessage;
     }
 
@@ -197,25 +178,18 @@ public class MessageHandler {
      * @param longId,message -идентификатор пользователя, сообщение от пользователя.
      */
     public BotApiMethod<?> getRight(Message message, Long longId) {
-        SendMessage sendMessage = new SendMessage();
-
-        RestTemplate restTemplate = new Rest().createRestTemplate();
-        ResponseEntity<PersonModel> response = restTemplate
-                .getForEntity("http://localhost:7676/server/{id}/preference/{action}", PersonModel.class, longId, message.getText());
+        ResponseEntity<PersonModel> response = requestRunner.runnerGetRightFavorite(message, longId);
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
         Person lover = response.getBody().getLover();
+
+        SendMessage sendMessage = new SendMessage();
         if (!lover.getName().equals("")) {
             sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName() + "\n" + response.getBody().getStatus());
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Влево", "Меню", "Вправо"));
         } else {
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
         }
-        log.info("log message: {}", "Пользователь нажал вправо в режиме любимцев и совершил запрос" +
-                "http://localhost:7676/server/{id}/preference/{action}");
-
-
         return sendMessage;
-
     }
 
     /**
@@ -223,16 +197,15 @@ public class MessageHandler {
      *
      * @param longId,message -идентификатор пользователя, сообщение от пользователя.
      */
-    public BotApiMethod<?> getLike(Message message, Long longId) {
-        SendMessage sendMessage = new SendMessage();
-        RestTemplate restTemplate = new Rest().createRestTemplate();
+    public BotApiMethod<?> getLike(Long longId) {
         Person person = new Person();
         person.setId(longId);
         HttpEntity<Person> httpEntity = new HttpEntity<>(person);
-        ResponseEntity<PersonModel> response = restTemplate
-                .postForEntity("http://localhost:7676/server/person/like", httpEntity, PersonModel.class);
+        ResponseEntity<PersonModel> response = requestRunner.runnerGetLike(httpEntity);
         pathRequest = Objects.requireNonNull(response.getBody()).writeToPicture();
         Person lover = response.getBody().getLover();
+
+        SendMessage sendMessage = new SendMessage();
         if (!response.getBody().getStatus().isEmpty()) {
             map.get(longId).setStatus(response.getBody().getStatus());
         }
@@ -243,9 +216,6 @@ public class MessageHandler {
 
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu(disLike, "Меню", like));
         }
-        log.info("log message: {}", "Пользователь нажал вправо в режиме поиска и совершил запрос" +
-                "http://localhost:7676/server/person/like");
-
         return sendMessage;
     }
 
@@ -271,10 +241,7 @@ public class MessageHandler {
     public BotApiMethod<?> getContinue(Long longId) {
         SendMessage sendMessage;
         try {
-            RestTemplate restTemplate = new Rest().createRestTemplate();
-            ResponseEntity<PersonModel> response =
-                    restTemplate.getForEntity("http://localhost:7676/server/person/{id}",
-                            PersonModel.class, longId);
+            ResponseEntity<PersonModel> response = requestRunner.runnerGetContinue(longId);
             Person lover = Objects.requireNonNull(response.getBody()).getLover();
             map.put(longId, lover);
             pathRequest = response.getBody().writeToPicture();
@@ -285,8 +252,6 @@ public class MessageHandler {
         } catch (HttpServerErrorException e) {
             throw new RuntimeException("Пользователь пытался получить анкету не создав её");
         }
-        log.info("log message: {}", "Пользователь ввёл /continue совершил запрос" +
-                "http://localhost:7676/server/person/{id}");
         return sendMessage;
     }
 

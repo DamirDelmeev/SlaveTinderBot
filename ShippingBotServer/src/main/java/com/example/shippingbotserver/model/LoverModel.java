@@ -11,6 +11,7 @@ import javax.persistence.Table;
 
 @Table(name = "lover")
 @Entity
+@EqualsAndHashCode
 @Getter
 @Setter
 @AllArgsConstructor

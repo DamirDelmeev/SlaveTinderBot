@@ -2,14 +2,13 @@ package com.ru.liga.shippingbot.handlers;
 
 import com.ru.liga.shippingbot.bot.BotState;
 import com.ru.liga.shippingbot.entity.Person;
-import com.ru.liga.shippingbot.handlers.template.Rest;
+import com.ru.liga.shippingbot.handlers.template.RequestRunner;
 import com.ru.liga.shippingbot.keyboard.ReplyKeyboardMaker;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -32,6 +31,13 @@ public class FormHandler {
      */
     @Getter
     Map<Long, Person> map;
+
+    RequestRunner requestRunner;
+
+    @Autowired
+    public FormHandler(RequestRunner requestRunner) {
+        this.requestRunner = requestRunner;
+    }
 
     @Autowired
     public void setMap(Map<Long, Person> map) {
@@ -104,17 +110,14 @@ public class FormHandler {
                 message.getText().equals("Всех")) {
             map.get(longId).setPreference(message.getText());
 
-            RestTemplate restTemplate = new Rest().createRestTemplate();
             Person person = map.get(longId);
             HttpEntity<Person> httpEntity = new HttpEntity<>(person);
-            restTemplate.postForEntity("http://localhost:7676/server/person", httpEntity, String.class);
+            requestRunner.runnerGetUserPreference(httpEntity);
 
             SendMessage sendMessage = new SendMessage(longId.toString(), "Поздравляем,вы заполнили анкету.");
             map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu
                     ("Анкета", "Поиск", "Любимцы"));
-            log.info("log message: {}", "Пользователь завершил создание анкеты и записал preference и выполнил запрос" +
-                    " http://localhost:7676/server/person");
             return sendMessage;
         }
         throw new RuntimeException("Ошибка: попытка внести в поле aim другой аргумент.");

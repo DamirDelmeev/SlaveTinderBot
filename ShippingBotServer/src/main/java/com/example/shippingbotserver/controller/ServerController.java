@@ -9,8 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-
 @Slf4j
 @RestController
 public class ServerController {
@@ -25,15 +23,29 @@ public class ServerController {
     @GetMapping("/person/{id}")
     public @ResponseBody ResponseEntity<FormLoverModel> getLoverByUserId(@PathVariable("id") Long request) {
         log.debug("log message {}", "request by /server/person/" + request);
-        FormLoverModel form = daoProcessing.findLoverById(request);
+        FormLoverModel form;
+        try {
+            form = daoProcessing.findLoverById(request);
+        } catch (RuntimeException e) {
+            log.debug("log message {}", e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
         log.debug("log message {}", "Response OK");
         return new ResponseEntity<>(form, HttpStatus.OK);
     }
 
     @GetMapping("/person/{id}/show/lovers")
-    public @ResponseBody ResponseEntity<FormLoverModel> showQuestionnaire(@PathVariable Long id){
-        log.debug("log message {}", "request by /server/person/" + id +"/show/lovers");
-        FormLoverModel formLoverModel = daoProcessing.getQuestionnaire(id);
+    public @ResponseBody ResponseEntity<FormLoverModel> showQuestionnaire(@PathVariable Long id) {
+        log.debug("log message {}", "request by /server/person/" + id + "/show/lovers");
+
+        FormLoverModel formLoverModel;
+        try {
+            formLoverModel = daoProcessing.getQuestionnaire(id);
+        } catch (RuntimeException e) {
+            log.debug("log message {}", e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
         log.debug("log message {}", "Response OK");
         return new ResponseEntity<>(formLoverModel, HttpStatus.OK);
     }
@@ -42,7 +54,15 @@ public class ServerController {
     public @ResponseBody ResponseEntity<FormLoverModel> getLoverPreference(@PathVariable("id") Long id,
                                                                            @PathVariable("action") String action) {
         log.debug("log message {}", "request by /server/" + id + "/preference/" + action);
-        FormLoverModel favorite = daoProcessing.getFavorite(id, action);
+
+        FormLoverModel favorite;
+        try {
+            favorite = daoProcessing.getFavorite(id, action);
+        } catch (RuntimeException e) {
+            log.debug("log message {}", e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
         log.debug("log message {}", "Response OK");
         return new ResponseEntity<>(favorite, HttpStatus.OK);
     }
@@ -50,7 +70,14 @@ public class ServerController {
     @PostMapping("/person/dislike")
     public @ResponseBody ResponseEntity<FormLoverModel> dislikeLover(@RequestBody Lover id) {
         log.debug("log message {}", "request by /server/person/dislike with parameter" + id.getId());
-        FormLoverModel formLoverModel = daoProcessing.dislike(id);
+        FormLoverModel formLoverModel;
+        try {
+            formLoverModel = daoProcessing.dislike(id);
+        } catch (RuntimeException e) {
+            log.debug("log message {}", e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
         log.debug("log message {}", "Response OK");
         return new ResponseEntity<>(formLoverModel, HttpStatus.OK);
     }
@@ -58,7 +85,15 @@ public class ServerController {
     @PostMapping("/person/like")
     public @ResponseBody ResponseEntity<FormLoverModel> likeLover(@RequestBody Lover id) {
         log.debug("log message {}", "request by /server/person/like with parameter" + id.getId());
-        FormLoverModel formLoverModel = daoProcessing.like(id);
+
+        FormLoverModel formLoverModel;
+        try {
+            formLoverModel = daoProcessing.like(id);
+        } catch (RuntimeException e) {
+            log.debug("log message {}", e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+
         log.debug("log message {}", "Response OK");
         return new ResponseEntity<>(formLoverModel, HttpStatus.OK);
     }

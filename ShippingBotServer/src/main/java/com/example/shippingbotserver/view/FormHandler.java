@@ -9,16 +9,16 @@ import ij.process.ImageProcessor;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -39,6 +39,7 @@ public class FormHandler {
     }
 
     public void init(Lover person) {
+        log.debug("log message{}", "initing person: " + person);
         nullInitFields();
         this.person = person;
         this.gender = textHandler.getTranslation(person.getGender().equals("boy") ? "Сударь" : "Сударыня");
@@ -48,6 +49,7 @@ public class FormHandler {
                 textHandler.getTranslation(textEditor.getTitle(person.getDescription())) : textEditor.getTitle(person.getDescription());
         this.text = person.getDescription().matches("[^a-zA-Z]*") ?
                 textHandler.getTranslation(textEditor.getText(person.getDescription())) : textEditor.getText(person.getDescription());
+        log.debug("log message{}", "person was init");
     }
 
     private void nullInitFields() {

@@ -2,7 +2,7 @@ package com.ru.liga.shippingbot.handlers;
 
 import com.ru.liga.shippingbot.bot.BotState;
 import com.ru.liga.shippingbot.entity.Person;
-import com.ru.liga.shippingbot.handlers.template.Rest;
+import com.ru.liga.shippingbot.handlers.template.RequestRunner;
 import com.ru.liga.shippingbot.keyboard.ReplyKeyboardMaker;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -34,6 +33,14 @@ public class ChangeHandler {
      */
     @Getter
     Map<Long, Person> map;
+
+
+    RequestRunner requestRunner;
+
+    @Autowired
+    public ChangeHandler(RequestRunner requestRunner) {
+        this.requestRunner = requestRunner;
+    }
 
     @Autowired
     public void setMap(Map<Long, Person> map) {
@@ -114,14 +121,11 @@ public class ChangeHandler {
     public BotApiMethod<?> addChangeGender(Message message, Long longId) {
         if (message.getText().equals("Сударь") || message.getText().equals("Сударыня")) {
             map.get(longId).setGender(message.getText());
-            RestTemplate restTemplate = new Rest().createRestTemplate();
-            HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-            restTemplate.put("http://localhost:7676/server/update/person", person);
+            HttpEntity<Person> personHttpEntity = new HttpEntity<>(map.get(longId));
+            requestRunner.runnerAddChangeGender(personHttpEntity);
             map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
             SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
-            log.info("log message: {}", "Пользователь изменил gender и выполнил запрос " +
-                    "http://localhost:7676/server/update/person");
             return sendMessage;
         } else {
             throw new RuntimeException("Пользователь не внёс изменение.");
@@ -135,14 +139,11 @@ public class ChangeHandler {
      */
     public BotApiMethod<?> addChangeName(Message message, Long longId) {
         map.get(longId).setName(message.getText());
-        RestTemplate restTemplate = new Rest().createRestTemplate();
-        HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-        restTemplate.put("http://localhost:7676/server/update/person", person);
+        HttpEntity<Person> personHttpEntity = new HttpEntity<>(map.get(longId));
+        requestRunner.runnerAddChangeName(personHttpEntity);
         map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
         sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
-        log.info("log message: {}", "Пользователь изменил name и выполнил запрос " +
-                "http://localhost:7676/server/update/person");
         return sendMessage;
     }
 
@@ -153,14 +154,11 @@ public class ChangeHandler {
      */
     public BotApiMethod<?> addChangeDescription(Message message, Long longId) {
         map.get(longId).setDescription(message.getText());
-        RestTemplate restTemplate = new Rest().createRestTemplate();
-        HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-        restTemplate.put("http://localhost:7676/server/update/person", person);
+        HttpEntity<Person> personHttpEntity = new HttpEntity<>(map.get(longId));
+        requestRunner.runnerAddChangeDescription(personHttpEntity);
         map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
         sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
-        log.info("log message: {}", "Пользователь изменил description и выполнил запрос " +
-                "http://localhost:7676/server/update/person");
         return sendMessage;
     }
 
@@ -172,14 +170,11 @@ public class ChangeHandler {
     public BotApiMethod<?> addChangePreference(Message message, Long longId) {
         if (message.getText().equals("Сударя") || message.getText().equals("Сударыню") || message.getText().equals("Всех")) {
             map.get(longId).setPreference(message.getText());
-            RestTemplate restTemplate = new Rest().createRestTemplate();
-            HttpEntity<Person> person = new HttpEntity<>(map.get(longId));
-            restTemplate.put("http://localhost:7676/server/update/person", person);
+            HttpEntity<Person> personHttpEntity = new HttpEntity<>(map.get(longId));
+            requestRunner.runnerAddChangePreference(personHttpEntity);
             map.get(longId).setBotState(BotState.SHOW_MAIN_MENU);
             SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
             sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu("Анкета", "Поиск", "Любимцы"));
-            log.info("log message: {}", "Пользователь изменил preference и выполнил запрос " +
-                    "http://localhost:7676/server/update/person");
             return sendMessage;
         } else {
             throw new RuntimeException("Пользователь не внёс изменение.");

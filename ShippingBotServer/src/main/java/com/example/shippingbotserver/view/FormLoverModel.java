@@ -7,11 +7,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+@Slf4j
 @NoArgsConstructor
 @Getter
 @Setter
@@ -37,7 +39,11 @@ public class FormLoverModel {
         status = "";
     }
 
-    public void initBytes() throws IOException {
-        bytesFromFile = Files.readAllBytes(Paths.get(pathWrite));
+    public void initBytes() {
+        try {
+            bytesFromFile = Files.readAllBytes(Paths.get(pathWrite));
+        } catch (IOException e) {
+            log.debug("log message{}", "InitBytes ERROR: " + e.getMessage());
+        }
     }
 }

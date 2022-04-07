@@ -19,14 +19,15 @@ public class TextEditor {
     }
 
     public String getTitle(String description) {
+        String[] split;
         if (description.contains("\n")) {
-            String[] split = description.split("\n");
-            return split[0];
+            split = description.split("\n");
         } else {
-            String[] split = description.split(" ");
-            return split[0];
+            split = description.split(" ");
         }
+        return trimOfVeryLargeTitle(split[0]);
     }
+
 
     public int sizeOfString(int len) {
         final double defaultSize = 30.0;
@@ -60,6 +61,13 @@ public class TextEditor {
             }
         }
         return lst;
+    }
+
+    private String trimOfVeryLargeTitle(String title) {
+        if (title.length() > 17) {
+            return title.substring(0, 17) + "...";
+        }
+        return title;
     }
 
     private boolean containN(String s) {

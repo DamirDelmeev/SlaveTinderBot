@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 @Table(name = "lover")
 @Entity
+@EqualsAndHashCode
 @AllArgsConstructor
 @Getter
 @Setter

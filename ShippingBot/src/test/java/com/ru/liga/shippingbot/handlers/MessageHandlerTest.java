@@ -2,8 +2,11 @@ package com.ru.liga.shippingbot.handlers;
 
 import com.ru.liga.shippingbot.bot.BotState;
 import com.ru.liga.shippingbot.entity.Person;
+import com.ru.liga.shippingbot.handlers.template.RequestRunner;
 import com.ru.liga.shippingbot.keyboard.ReplyKeyboardMaker;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
@@ -14,11 +17,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MessageHandlerTest {
+    @Mock
+    RequestRunner requestRunner;
+    MessageHandler messageHandler;
+
+    public MessageHandlerTest() {
+        MockitoAnnotations.openMocks(this);
+        this.messageHandler = new MessageHandler(requestRunner);
+
+    }
+
     @Test
     void getMenu() {
         Map<Long, Person> map = new HashMap<>();
         map.put(1L, new Person());
-        MessageHandler messageHandler = new MessageHandler();
         messageHandler.setMap(map);
         messageHandler.getMenu(1L);
         SendMessage sendMessage = new SendMessage();
@@ -26,9 +38,8 @@ class MessageHandlerTest {
         sendMessage.setChatId("1");
         sendMessage.setReplyMarkup(new ReplyKeyboardMaker()
                 .getMenu("Анкета", "Поиск", "Любимцы"));
-        BotApiMethod<?> botApiMethod = sendMessage;
 
-        assertEquals(botApiMethod, messageHandler.getMenu(1L));
+        assertEquals(sendMessage, messageHandler.getMenu(1L));
         assertEquals(BotState.SHOW_MAIN_MENU, map.get(1L).getBotState());
         assertThrows(NullPointerException.class, () -> messageHandler.getMenu(2L));
     }
@@ -39,7 +50,6 @@ class MessageHandlerTest {
         Person person = new Person();
         person.setStatus("Статус");
         map.put(1L, person);
-        MessageHandler messageHandler = new MessageHandler();
         messageHandler.setMap(map);
         messageHandler.getMenu(1L);
         SendMessage sendMessage = new SendMessage();
@@ -51,4 +61,17 @@ class MessageHandlerTest {
         assertEquals("", map.get(1L).getStatus());
         assertThrows(NullPointerException.class, () -> messageHandler.getMenu(2L));
     }
+
+    @Test
+    void testGetMenu() {
+        Map<Long, Person> map = new HashMap<>();
+        map.put(1L, new Person());
+        messageHandler.setMap(map);
+
+        SendMessage sendMessage = new SendMessage("1", "\n Используйте меню.");
+        sendMessage.setReplyMarkup(new ReplyKeyboardMaker().getMenu("Анкета", "Поиск", "Любимцы"));
+
+        assertEquals(sendMessage, messageHandler.getMenu(1L));
+    }
+
 }

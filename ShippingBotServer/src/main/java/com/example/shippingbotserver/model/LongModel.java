@@ -10,6 +10,7 @@ import javax.persistence.Table;
 
 @Table(name = "watch_lovers")
 @Entity
+@EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

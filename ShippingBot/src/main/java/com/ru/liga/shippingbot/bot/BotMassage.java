@@ -128,9 +128,10 @@ public class BotMassage extends SpringWebhookBot {
                 return right;
             }
             String like = EmojiParser.parseToUnicode(":hearts:");
-            if (update.getMessage().getText().equals(like) & map.get(update.getMessage().getFrom().getId()).getBotState().equals(BotState.SHOW_SEARCH)) {
-                BotApiMethod<?> likeForm = messageHandler.getLike(update.getMessage(),
-                        update.getMessage().getFrom().getId());
+            if (update.getMessage().getText().equals(like) &
+                    map.get(update.getMessage().getFrom().getId()).getBotState().equals(BotState.SHOW_SEARCH)) {
+
+                BotApiMethod<?> likeForm = messageHandler.getLike(update.getMessage().getFrom().getId());
                 if (map.get(update.getMessage().getFrom().getId()).getStatus() != null
                         && !map.get(update.getMessage().getFrom().getId()).getStatus().isEmpty()) {
                     writeStatus(update);
@@ -142,7 +143,7 @@ public class BotMassage extends SpringWebhookBot {
             if (update.getMessage().getText().equals(disLike)
                     & map.get(update.getMessage().getFrom().getId()).getBotState().equals(BotState.SHOW_SEARCH)) {
                 BotApiMethod<?> disLikeForm = messageHandler.getDislike
-                        (update.getMessage(), update.getMessage().getFrom().getId());
+                        (update.getMessage().getFrom().getId());
                 getPhoto(update);
                 return disLikeForm;
             }

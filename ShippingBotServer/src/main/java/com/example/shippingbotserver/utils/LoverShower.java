@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,40 +36,27 @@ public class LoverShower {
     }
 
     public void formInit(FormLoverModel formLoverModel) {
-        try{
-            log.debug("log message{}", "converting image to bytes...");
-            formLoverModel.initBytes();
-            log.debug("log message{}", "converting image to bytes exit success");
-        }catch (Exception e){
-            log.debug("log message{}", e.getMessage());
-        }
+        log.debug("log message{}", "converting image to bytes...");
+        formLoverModel.initBytes();
+        log.debug("log message{}", "converting image to bytes exit success");
     }
 
-    private void initLover(Lover lover) {
-        if (lover.getGender().equals("Сударь")) {
-            lover.setGender("boy");
-        } else {
-            lover.setGender("girl");
-        }
-        if (lover.getPreference().equals("Сударя")) {
-            lover.setPreference("boy");
-        }
-        if (lover.getPreference().equals("Сударыню")) {
-            lover.setPreference("girl");
-        } else {
-            lover.setPreference("all");
-        }
-    }
 
-    public String translateLover(String s){
-        switch (s){
-            case ("boy") : return "Сударь";
-            case ("girl") : return "Сударыня";
-            default:return s;
+    public String translateLover(String s) {
+        if (s == null)
+            return null;
+        switch (s) {
+            case ("boy"):
+                return "Сударь";
+            case ("girl"):
+                return "Сударыня";
+            default:
+                return s;
         }
     }
 
     public LoverModel showMe(Lover lover, LoverModelRepository modelRepository, LoverRepository loverRepository) {
+        reInitLover(lover, loverRepository);
         List<LoverModel> listOfLovers = modelRepository.findAll();
         List<LoverModel> likeOfLover = listOfLovers.stream().filter(l -> lover.getLike().contains(l)).collect(Collectors.toList());
         long count = listOfLovers.stream()
@@ -90,6 +78,30 @@ public class LoverShower {
             return showMe(lover, modelRepository, loverRepository);
         }
         return listOfLovers.get(0);
+    }
+
+    private void reInitLover(Lover lover, LoverRepository repository) {
+        Set<LoverModel> likes = lover.getLike().stream().filter(l -> isPreference(new LoverModel(lover), l)).collect(Collectors.toSet());
+        Set<LoverModel> likeMes = lover.getLikeMe().stream().filter(l -> isPreference(new LoverModel(lover), l)).collect(Collectors.toSet());
+        lover.setLike(likes);
+        lover.setLikeMe(likeMes);
+        repository.save(lover);
+    }
+
+    private void initLover(Lover lover) {
+        if (lover.getGender().equals("Сударь")) {
+            lover.setGender("boy");
+        } else {
+            lover.setGender("girl");
+        }
+        if (lover.getPreference().equals("Сударя")) {
+            lover.setPreference("boy");
+        }
+        if (lover.getPreference().equals("Сударыню")) {
+            lover.setPreference("girl");
+        } else {
+            lover.setPreference("all");
+        }
     }
 
     private boolean isPreference(LoverModel one, LoverModel two) {
