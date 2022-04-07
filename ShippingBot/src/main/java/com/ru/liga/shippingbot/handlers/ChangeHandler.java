@@ -56,7 +56,7 @@ public class ChangeHandler {
         map.get(longId).setBotState(BotState.SHOW_CHANGES);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Укажите поле, которое хотите изменить.");
         sendMessage.setReplyMarkup(replyKeyboardMaker.getMenu
-                ("Пол", "Имя", "Описание", "Приоритет поиска"));
+                ("Пол", "Имя", "Меню", "Приоритет поиска", "Описание"));
         log.info("log message: {}", "Пользователь нажал кнопку изменить анкету");
         return sendMessage;
     }

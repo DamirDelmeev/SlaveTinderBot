@@ -7,7 +7,6 @@ import com.ru.liga.shippingbot.keyboard.ReplyKeyboardMaker;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
@@ -39,7 +38,7 @@ class ChangeHandlerTest {
         sendMessage.setText("Укажите поле, которое хотите изменить.");
         sendMessage.setChatId("1");
         sendMessage.setReplyMarkup(new ReplyKeyboardMaker().getMenu
-                ("Пол", "Имя", "Описание", "Приоритет поиска"));
+                ("Пол", "Имя", "Меню", "Приоритет поиска", "Описание"));
 
         assertEquals(sendMessage, changeHandler.getChangeFormFirstStage(1L));
         assertEquals(BotState.SHOW_CHANGES, map.get(1L).getBotState());

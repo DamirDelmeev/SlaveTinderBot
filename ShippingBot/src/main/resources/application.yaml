@@ -1,6 +1,6 @@
 telegram:
   api-url: "https://api.telegram.org/"
-  webhook-path: "https://e246-188-227-8-212.ngrok.io"
+  webhook-path: "https://e745-188-227-8-212.ngrok.io"
   bot-name: "FindMyPairBot"
   bot-token: "5123717861:AAFGrC2LcPDY1R_xHpt9WZwgFkrwNetGxqQ"
 spring:

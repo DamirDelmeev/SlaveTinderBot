@@ -68,7 +68,8 @@ public class ReplyKeyboardMaker {
         return replyKeyboardMarkup;
     }
 
-    public ReplyKeyboard getMenu(String firstButton, String secondButton, String thirdButton, String fourthButton) {
+    public ReplyKeyboard getMenu(String firstButton, String secondButton, String thirdButton, String fourthButton,
+                                 String menuButton) {
         KeyboardRow rowFirst = new KeyboardRow();
         rowFirst.add(new KeyboardButton(firstButton));
         rowFirst.add(new KeyboardButton(secondButton));
@@ -76,7 +77,7 @@ public class ReplyKeyboardMaker {
         KeyboardRow rowSecond = new KeyboardRow();
         rowSecond.add(new KeyboardButton(thirdButton));
         rowFirst.add(new KeyboardButton(fourthButton));
-
+        rowFirst.add(new KeyboardButton(menuButton));
         List<KeyboardRow> keyboard = new ArrayList<>();
         keyboard.add(rowFirst);
         keyboard.add(rowSecond);
