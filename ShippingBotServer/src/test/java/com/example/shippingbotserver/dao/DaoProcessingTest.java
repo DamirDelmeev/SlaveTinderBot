@@ -32,7 +32,7 @@ class DaoProcessingTest {
     @Mock
     private FormHandler formHandler;
 
-    private final DaoProcessing daoProcessing;
+    private DaoProcessing daoProcessing;
 
     public DaoProcessingTest() {
         MockitoAnnotations.openMocks(this);

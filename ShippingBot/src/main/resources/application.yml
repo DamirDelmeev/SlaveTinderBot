@@ -1,0 +1,12 @@
+telegram:
+  api-url: "https://api.telegram.org/"
+  webhook-path: "webhook-url"
+  bot-name: "name"
+  bot-token: "token"
+spring:
+  #    host: "<...>.compute-1.amazonaws.com"
+  port: "1234"
+  #    password:
+  ssl: true
+server:
+  port: "1234"

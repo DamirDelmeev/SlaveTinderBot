@@ -1,0 +1,14 @@
+package com.liga.shippingbot.exception_handling;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+@ControllerAdvice
+@Slf4j
+public class ExceptionHandlerForBot {
+    @ExceptionHandler
+    public void handleException(Exception exception) {
+        log.info("log message: {}", exception.getMessage());
+    }
+}

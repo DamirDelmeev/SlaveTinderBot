@@ -8,14 +8,17 @@
         <version>2.6.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+
     <groupId>com.example</groupId>
     <artifactId>ShippingBot</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ShippingBot</name>
     <description>ShippingBot</description>
+
     <properties>
         <java.version>1.8</java.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

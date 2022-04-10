@@ -12,10 +12,11 @@
     </appender>
 
     <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="DEBUG">
-        <file>logs.log</file>
+        <file>log.log</file>
+        <append>true</append>
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>log.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>7</maxHistory>
             <totalSizeCap>100MB</totalSizeCap>
         </rollingPolicy>

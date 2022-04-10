@@ -1,7 +1,7 @@
 package com.example.shippingbotserver.view;
 
 import com.example.shippingbotserver.entity.Lover;
-import com.example.shippingbotserver.translation.TextHandler;
+import com.example.shippingbotserver.translation.TextHandlerImpl;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.io.FileSaver;
@@ -29,12 +29,12 @@ public class FormHandler {
     String title;
     String text;
     File file;
-    private final TextHandler textHandler;
+    private final TextHandlerImpl textHandlerImpl;
     private final TextEditor textEditor;
 
     @Autowired
-    public FormHandler(TextHandler textHandler, TextEditor textEditor) {
-        this.textHandler = textHandler;
+    public FormHandler(TextHandlerImpl textHandlerImpl, TextEditor textEditor) {
+        this.textHandlerImpl = textHandlerImpl;
         this.textEditor = textEditor;
     }
 
@@ -42,13 +42,13 @@ public class FormHandler {
         log.debug("log message{}", "initing person: " + person);
         nullInitFields();
         this.person = person;
-        this.gender = textHandler.getTranslation(person.getGender().equals("boy") ? "Сударь" : "Сударыня");
+        this.gender = textHandlerImpl.getTranslation(person.getGender().equals("boy") ? "Сударь" : "Сударыня");
         this.name = person.getName().equals("") ? "" : (person.getName().matches("[^a-zA-Z]*") ?
-                textHandler.getTranslation(person.getName()) : person.getName());
+                textHandlerImpl.getTranslation(person.getName()) : person.getName());
         this.title = person.getDescription().matches("[^a-zA-Z]*") ?
-                textHandler.getTranslation(textEditor.getTitle(person.getDescription())) : textEditor.getTitle(person.getDescription());
+                textHandlerImpl.getTranslation(textEditor.getTitle(person.getDescription())) : textEditor.getTitle(person.getDescription());
         this.text = person.getDescription().matches("[^a-zA-Z]*") ?
-                textHandler.getTranslation(textEditor.getText(person.getDescription())) : textEditor.getText(person.getDescription());
+                textHandlerImpl.getTranslation(textEditor.getText(person.getDescription())) : textEditor.getText(person.getDescription());
         log.debug("log message{}", "person was init");
     }
 

@@ -139,17 +139,33 @@ public class DaoProcessing {
 
 
     public void saveLover(Lover person) {
-        if (person.getGender().equals("Сударь")) {
-            person.setGender("boy");
-        } else {
-            person.setGender("girl");
+        if (person.getGender() != null) {
+            if (person.getGender().equals("Сударь")) {
+                person.setGender("boy");
+            } else {
+                person.setGender("girl");
+            }
         }
-        if (person.getPreference().equals("Сударя")) {
-            person.setPreference("boy");
-        } else if (person.getPreference().equals("Всех")) {
-            person.setPreference("all");
-        } else {
-            person.setPreference("girl");
+        if (person.getPreference() != null) {
+            if (person.getPreference().equals("Сударя")) {
+                person.setPreference("boy");
+            } else if (person.getPreference().equals("Всех")) {
+                person.setPreference("all");
+            } else {
+                person.setPreference("girl");
+            }
+        }
+        if (person.getName() == null) {
+            person.setName("");
+        }
+        if (person.getGender() == null) {
+            person.setGender("");
+        }
+        if (person.getPreference() == null) {
+            person.setPreference("");
+        }
+        if (person.getDescription() == null) {
+            person.setDescription("");
         }
         repository.save(person);
         log.debug("log message{}", "person was saved");
