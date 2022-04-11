@@ -1,5 +1,6 @@
 package com.example.shippingbotserver.view;
 
+
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -9,13 +10,13 @@ import java.util.stream.Collectors;
 @Component
 public class TextEditor {
     public String getText(String description) {
+        String[] split;
         if (description.contains("\n")) {
-            String[] split = description.split("\n");
-            return Arrays.stream(split).skip(1).collect(Collectors.joining(" "));
+            split = description.split("\n");
         } else {
-            String[] split = description.split(" ");
-            return Arrays.stream(split).skip(1).collect(Collectors.joining(" "));
+            split = description.split(" ");
         }
+        return Arrays.stream(split).skip(1).collect(Collectors.joining(" "));
     }
 
     public String getTitle(String description) {

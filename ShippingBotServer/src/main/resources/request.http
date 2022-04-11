@@ -1,0 +1,19 @@
+PUT http://localhost:8686/server/user/
+Content-Type: application/json
+
+{
+  "id": 45454554,
+  "name": "Liza",
+  "gender": "Сударыня",
+  "preference": "Сударя",
+  "description": "Ножи в кармане, вперед, россияне"
+}
+
+###
+GET http://localhost:8686/server/user/45454554
+Accept: application/json
+
+
+}
+
+###

@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ExceptionHandlerForBot {
     @ExceptionHandler
     public void handleException(Exception exception) {
-        log.info("log message: {}", exception.getMessage());
+        log.debug("log message: {}", exception.getMessage());
     }
 }

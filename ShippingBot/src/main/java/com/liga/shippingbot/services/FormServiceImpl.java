@@ -3,6 +3,7 @@ package com.liga.shippingbot.services;
 import com.liga.shippingbot.api.PersonRequest;
 import com.liga.shippingbot.api.PersonResponse;
 import com.liga.shippingbot.bot.BotState;
+import com.liga.shippingbot.constants.Commands;
 import com.liga.shippingbot.constants.Gender;
 import com.liga.shippingbot.constants.MenuButton;
 import com.liga.shippingbot.constants.Preferences;
@@ -27,42 +28,40 @@ public class FormServiceImpl implements FormService {
 
     private final ReplyKeyboardMaker replyKeyboardMaker;
 
-
     private final RequestRunner requestRunner;
-    // @Autowired
-    // private UserState userState;
-
 
     public BotApiMethod<?> startMessage(Message message, Long longId, UserState userState) {
-
         PersonResponse personResponse = requestRunner.runnerGetContinue(longId);
         userState.setBotState(BotState.CREATING_STATE);
-        //если у объекта есть одно или более пустых полей или если все поля пустые тогда создание
-        //если все поля заполнены тогда ремув
-
+        PersonRequest user = personResponse.getUser();
+        if (user.getId() != null && user.getGender() != null && user.getName() != null
+                && user.getDescription() != null && user.getPreference() != null
+                && message.getText().equals(Commands.START.getName())) {
+            requestRunner.runnerDelete(longId);
+            personResponse = null;
+        }
         if (personResponse == null) {
-            PersonRequest personRequest = PersonRequest.builder().id(longId).build();
-            requestRunner.runnerPostUser(personRequest);
-            SendMessage sendMessage = new SendMessage(longId.toString(), "Вы сударь иль сударыня?");
-            sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboard(Arrays.asList(Gender.MALE, Gender.FEMALE)));
-            log.info("log message: {}", "Пользователь запустил создание анкеты и создал объект person.");
-            return sendMessage;
+            return createNewPerson(longId);
         } else {
-            if (personResponse.getLover().getGender() == null || personResponse.getLover().getGender().isEmpty()) {
-                return getUserGender(message, personResponse.getLover());
-            } else if (personResponse.getLover().getName() == null || personResponse.getLover().getName().isEmpty()) {
-                return getUserName(message, personResponse.getLover());
-            } else if (personResponse.getLover().getDescription() == null || personResponse.getLover().getDescription().isEmpty()) {
-                return getUserDescription(message, personResponse.getLover());
-            } else if (personResponse.getLover().getPreference() == null || personResponse.getLover().getPreference().isEmpty()) {
-                return getUserPreference(message, personResponse.getLover(), userState);
+            if (personResponse.getUser().getGender() == null || personResponse.getUser().getGender().isEmpty()) {
+                return getUserGender(message, personResponse.getUser());
+            } else if (personResponse.getUser().getName() == null || personResponse.getUser().getName().isEmpty()) {
+                return getUserName(message, personResponse.getUser());
+            } else if (personResponse.getUser().getDescription() == null || personResponse.getUser().getDescription().isEmpty()) {
+                return getUserDescription(message, personResponse.getUser());
+            } else if (personResponse.getUser().getPreference() == null || personResponse.getUser().getPreference().isEmpty()) {
+                return getUserPreference(message, personResponse.getUser(), userState);
             }
         }
+        return null;
+    }
 
-        userState.setBotState(BotState.SHOW_MAIN_MENU);
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Используйте меню.");
-        sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboard
-                (Arrays.asList(MenuButton.FORM_BUTTON, MenuButton.SEARCH_BUTTON, MenuButton.FAVORITE_BUTTON)));
+    private SendMessage createNewPerson(Long longId) {
+        PersonRequest personRequest = PersonRequest.builder().id(longId).build();
+        requestRunner.runnerPostUser(personRequest);
+        SendMessage sendMessage = new SendMessage(longId.toString(), "Вы сударь иль сударыня?");
+        sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboard(Arrays.asList(Gender.MALE, Gender.FEMALE)));
+        log.info("log message: {}", "Пользователь запустил создание анкеты и создал объект person.");
         return sendMessage;
     }
 
@@ -75,9 +74,9 @@ public class FormServiceImpl implements FormService {
             log.info("log message: {}", "Пользователь продолжил создание анкеты и записал gender.");
             return sendMessage;
         }
-        throw new RuntimeException("Ошибка: попытка внести в поле gender другой аргумент.");
+        return new SendMessage(message.getFrom().getId().toString(),
+                "Доступно:\n" + Gender.FEMALE.getName() + "\n" + Gender.MALE.getName());
     }
-
 
     private BotApiMethod<?> getUserName(Message message, PersonRequest personRequest) {
         requestRunner.runnerPutUser(personRequest.toBuilder().name(message.getText()).build());
@@ -87,7 +86,6 @@ public class FormServiceImpl implements FormService {
         return sendMessage;
     }
 
-
     private BotApiMethod<?> getUserDescription(Message message, PersonRequest personRequest) {
         requestRunner.runnerPutUser(personRequest.toBuilder().description(message.getText()).build());
         SendMessage sendMessage = new SendMessage(personRequest.getId().toString(), "Кого вы ищите?");
@@ -96,7 +94,6 @@ public class FormServiceImpl implements FormService {
         log.info("log message: {}", "Пользователь продолжил создание анкеты и записал description.");
         return sendMessage;
     }
-
 
     private BotApiMethod<?> getUserPreference(Message message, PersonRequest personRequest, UserState userState) {
         if (Preferences.matches(message.getText())) {
@@ -108,6 +105,8 @@ public class FormServiceImpl implements FormService {
                     (Arrays.asList(MenuButton.FORM_BUTTON, MenuButton.SEARCH_BUTTON, MenuButton.FAVORITE_BUTTON)));
             return sendMessage;
         }
-        throw new RuntimeException("Ошибка: попытка внести в поле aim другой аргумент.");
+        return new SendMessage(message.getFrom().getId().toString(),
+                "Доступно:\n" + Preferences.ALL_AIM.getName() + "\n"
+                        + Preferences.FEMALE_AIM.getName() + "\n" + Preferences.MALE_AIM.getName());
     }
 }

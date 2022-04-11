@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 @Data
 public class PersonResponse {
     private byte[] bytesFromFile;
-    private PersonRequest lover;
+    private PersonRequest user;
     private String status;
 
     @Override
     public String toString() {
-        return lover.getGender() + ", " + lover.getName();
+        return user.getGender() + ", " + user.getName();
     }
 }

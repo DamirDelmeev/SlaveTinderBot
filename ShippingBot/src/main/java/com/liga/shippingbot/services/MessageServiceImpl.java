@@ -40,16 +40,16 @@ public class MessageServiceImpl implements MessageService {
 
     private final RequestRunner requestRunner;
 
+    private final FormServiceImpl formService;
 
     public BotApiMethod<?> getSearch(Long longId, UserState userState) {
-        PersonResponse response = requestRunner.runnerSearch(longId);
+        PersonResponse response = requestRunner.runnerGetSearch(longId);
 
         formUser = response.getBytesFromFile();
-        PersonRequest lover = response.getLover();
+        PersonRequest lover = response.getUser();
         SendMessage sendMessage = new SendMessage();
         if (!lover.getName().isEmpty()) {
             sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName());
-
         }
         userState.setBotState(BotState.SHOW_SEARCH);
         sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboard
@@ -62,7 +62,7 @@ public class MessageServiceImpl implements MessageService {
         SendMessage sendMessage = new SendMessage();
         PersonResponse response = requestRunner.runnerGetFavorite(message, longId);
         formUser = response.getBytesFromFile();
-        PersonRequest lover = response.getLover();
+        PersonRequest lover = response.getUser();
         if (!lover.getName().isEmpty()) {
             sendMessage = new SendMessage
                     (longId.toString(), lover.getGender() + " - " + lover.getName() + "\n" + response.getStatus());
@@ -77,19 +77,29 @@ public class MessageServiceImpl implements MessageService {
         return sendMessage;
     }
 
-    public BotApiMethod<?> getCommands(Long longId, UserState userState) {
-
-        SendMessage sendMessage = new SendMessage(longId.toString(), "Чтобы получить анкету используйте " +
-                "команды:\n/start-создать анкету.\n/continue-у меня уже есть анкета.");
-
-        return sendMessage;
-
-
+    public BotApiMethod<?> getCommands(Long longId, UserState userState, Message message) {
+        try {
+            PersonResponse response = requestRunner.runnerGetForm(longId);
+            PersonRequest user = response.getUser();
+            if (user.getId() != null && user.getGender() != null && user.getName() != null
+                    && user.getDescription() != null && user.getPreference() != null) {
+                SendMessage sendMessage = new SendMessage(longId.toString(), response.toString());
+                formUser = response.getBytesFromFile();
+                userState.setBotState(BotState.SHOW_MAIN_MENU);
+                sendMessage.setReplyMarkup(replyKeyboardMaker.getKeyboard
+                        (Arrays.asList(MenuButton.FORM_BUTTON, MenuButton.SEARCH_BUTTON, MenuButton.FAVORITE_BUTTON)));
+                return sendMessage;
+            } else {
+                return formService.startMessage(message, longId, userState);
+            }
+        } catch (HttpServerErrorException exception) {
+            return new SendMessage(longId.toString(), "Чтобы получить анкету используйте " +
+                    "команды:\n/start-создать анкету.\n/continue-у меня уже есть анкета.");
+        }
     }
 
     public BotApiMethod<?> getForm(Long longId, UserState userState) {
         try {
-
             PersonResponse response = requestRunner.runnerGetForm(longId);
             userState.setId(longId);
             formUser = response.getBytesFromFile();
@@ -103,11 +113,10 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
-
     public BotApiMethod<?> getLeft(Message message, Long longId) {
         PersonResponse response = requestRunner.runnerGetLeftFavorite(message, longId);
         formUser = response.getBytesFromFile();
-        PersonRequest lover = response.getLover();
+        PersonRequest lover = response.getUser();
 
         SendMessage sendMessage = new SendMessage();
         if (!lover.getName().isEmpty()) {
@@ -121,14 +130,13 @@ public class MessageServiceImpl implements MessageService {
         return sendMessage;
     }
 
-
     public BotApiMethod<?> getDislike(Long longId) {
         SendMessage sendMessage = new SendMessage();
-        PersonRequest personRequest = new PersonRequest();//исправить
+        PersonRequest personRequest = new PersonRequest();
         personRequest.setId(longId);
         PersonResponse response = requestRunner.runnerGetDislike(personRequest);
         formUser = Objects.requireNonNull(response).getBytesFromFile();
-        PersonRequest lover = response.getLover();
+        PersonRequest lover = response.getUser();
         if (!lover.getName().isEmpty()) {
             sendMessage = new SendMessage(longId.toString(), lover.getGender() + " - " + lover.getName());
 
@@ -141,11 +149,10 @@ public class MessageServiceImpl implements MessageService {
         return sendMessage;
     }
 
-
-    public BotApiMethod<?> getRight(Message message, Long longId) {//исправить
+    public BotApiMethod<?> getRight(Message message, Long longId) {
         PersonResponse response = requestRunner.runnerGetRightFavorite(message, longId);
         formUser = response.getBytesFromFile();
-        PersonRequest lover = response.getLover();
+        PersonRequest lover = response.getUser();
 
         SendMessage sendMessage = new SendMessage();
         if (!lover.getName().isEmpty()) {
@@ -159,17 +166,16 @@ public class MessageServiceImpl implements MessageService {
         return sendMessage;
     }
 
-
     public BotApiMethod<?> getLike(Long longId, UserState userState) {
         PersonRequest personRequest = new PersonRequest();
-        personRequest.setId(longId);//исправить
+        personRequest.setId(longId);
 
         PersonResponse response = requestRunner.runnerGetLike(personRequest);
         formUser = response.getBytesFromFile();
-        PersonRequest lover = response.getLover();
+        PersonRequest lover = response.getUser();
 
         SendMessage sendMessage = new SendMessage();
-        if (!response.getStatus().isEmpty()) {//исправить else
+        if (!response.getStatus().isEmpty()) {
             userState.setStatus(response.getStatus());
         }
         if (!lover.getName().isEmpty()) {
@@ -181,7 +187,6 @@ public class MessageServiceImpl implements MessageService {
         return sendMessage;
     }
 
-
     public BotApiMethod<?> getMenu(Long longId, UserState userState) {
         SendMessage sendMessage = new SendMessage(longId.toString(), "\n Используйте меню.");
         userState.setBotState(BotState.SHOW_MAIN_MENU);
@@ -191,15 +196,11 @@ public class MessageServiceImpl implements MessageService {
         return sendMessage;
     }
 
-
     public BotApiMethod<?> getContinue(Long longId, UserState userState) {
-
         try {
-
-            PersonResponse response = requestRunner.runnerGetContinue(longId);  //исправить
-            //Exception handler
-            PersonRequest lover = response.getLover();
-            userState.setId(longId);//исправить
+            PersonResponse response = requestRunner.runnerGetContinue(longId);
+            PersonRequest lover = response.getUser();
+            userState.setId(longId);
             formUser = response.getBytesFromFile();
             SendMessage sendMessage = new SendMessage(longId.toString(),
                     lover.getGender() + " - " + lover.getName() + "\nИспользуйте меню.");
@@ -210,20 +211,16 @@ public class MessageServiceImpl implements MessageService {
         } catch (HttpServerErrorException e) {
             throw new RuntimeException("Пользователь пытался получить анкету не создав её");
         }
-
     }
-
 
     @SneakyThrows
     public SendPhoto sendPhoto(Long longId) {
-        //  File image = ResourceUtils.getFile(pathRequest);//исправить ссылку на ресурсы
         InputStream inputStream = new ByteArrayInputStream(formUser);
         SendPhoto sendPhoto = new SendPhoto();
         sendPhoto.setPhoto(new InputFile(inputStream, "picture.jpg"));
         sendPhoto.setChatId(String.valueOf(longId));
         return sendPhoto;
     }
-
 
     public SendMessage sendStatus(Long longId, UserState userState) {
         SendMessage sendMessage = new SendMessage(longId.toString(), userState.getStatus());

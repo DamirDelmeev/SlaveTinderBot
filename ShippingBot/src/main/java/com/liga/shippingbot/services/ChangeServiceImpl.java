@@ -24,11 +24,8 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 @Slf4j
 public class ChangeServiceImpl implements ChangeService {
-
     private final ReplyKeyboardMaker replyKeyboardMaker;
-
     private final RequestRunner requestRunner;
-
 
     public BotApiMethod<?> getChangeFormFirstStage(Long longId, UserState userState) {
         userState.setBotState(BotState.CHANGES);
@@ -48,7 +45,6 @@ public class ChangeServiceImpl implements ChangeService {
         return sendMessage;
     }
 
-
     public BotApiMethod<?> getChangeNameSecondStage(Long longId, UserState userState) {
         userState.setBotState(BotState.CHANGE_NAME);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Как вас зовут?");
@@ -57,7 +53,6 @@ public class ChangeServiceImpl implements ChangeService {
         return sendMessage;
     }
 
-
     public BotApiMethod<?> getChangeDescriptionSecondStage(Long longId, UserState userState) {
         userState.setBotState(BotState.CHANGE_DESCRIPTION);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Опишите себя.");
@@ -65,7 +60,6 @@ public class ChangeServiceImpl implements ChangeService {
         log.info("log message: {}", "Пользователь выбрал поле description для изменений.");
         return sendMessage;
     }
-
 
     public BotApiMethod<?> getChangePreferenceSecondStage(Long longId, UserState userState) {
         userState.setBotState(BotState.CHANGE_PREFERENCE);
@@ -76,14 +70,13 @@ public class ChangeServiceImpl implements ChangeService {
         return sendMessage;
     }
 
-
     public BotApiMethod<?> addChangeGender(Message message, Long longId, UserState userState) {
         if (Gender.matches(message.getText())) {
             PersonResponse personResponse = requestRunner.runnerGetContinue(longId);
             if (personResponse == null) {
                 throw new RuntimeException("Пользователь не найден.");
             }
-            PersonRequest person = personResponse.getLover().toBuilder().gender(message.getText()).build();
+            PersonRequest person = personResponse.getUser().toBuilder().gender(message.getText()).build();
             requestRunner.runnerPutUser(person);
             userState.setBotState(BotState.SHOW_MAIN_MENU);
             SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
@@ -91,17 +84,17 @@ public class ChangeServiceImpl implements ChangeService {
                     (Arrays.asList(MenuButton.FORM_BUTTON, MenuButton.SEARCH_BUTTON, MenuButton.FAVORITE_BUTTON)));
             return sendMessage;
         } else {
-            throw new RuntimeException("Пользователь не внёс изменение.");
+            return new SendMessage(message.getFrom().getId().toString(),
+                    "Доступно:\n" + Gender.FEMALE.getName() + "\n" + Gender.MALE.getName());
         }
     }
-
 
     public BotApiMethod<?> addChangeName(Message message, Long longId, UserState userState) {
         PersonResponse personResponse = requestRunner.runnerGetContinue(longId);
         if (personResponse == null) {
             throw new RuntimeException("Пользователь не найден.");
         }
-        PersonRequest person = personResponse.getLover().toBuilder().name(message.getText()).build();
+        PersonRequest person = personResponse.getUser().toBuilder().name(message.getText()).build();
         requestRunner.runnerPutUser(person);
         userState.setBotState(BotState.SHOW_MAIN_MENU);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
@@ -109,14 +102,13 @@ public class ChangeServiceImpl implements ChangeService {
                 (Arrays.asList(MenuButton.FORM_BUTTON, MenuButton.SEARCH_BUTTON, MenuButton.FAVORITE_BUTTON)));
         return sendMessage;
     }
-
 
     public BotApiMethod<?> addChangeDescription(Message message, Long longId, UserState userState) {
         PersonResponse personResponse = requestRunner.runnerGetContinue(longId);
         if (personResponse == null) {
             throw new RuntimeException("Пользователь не найден.");
         }
-        PersonRequest person = personResponse.getLover().toBuilder().description(message.getText()).build();
+        PersonRequest person = personResponse.getUser().toBuilder().description(message.getText()).build();
         requestRunner.runnerPutUser(person);
         userState.setBotState(BotState.SHOW_MAIN_MENU);
         SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
@@ -124,7 +116,6 @@ public class ChangeServiceImpl implements ChangeService {
                 (Arrays.asList(MenuButton.FORM_BUTTON, MenuButton.SEARCH_BUTTON, MenuButton.FAVORITE_BUTTON)));
         return sendMessage;
     }
-
 
     public BotApiMethod<?> addChangePreference(Message message, Long longId, UserState userState) {
         if (Preferences.matches(message.getText())) {
@@ -132,7 +123,7 @@ public class ChangeServiceImpl implements ChangeService {
             if (personResponse == null) {
                 throw new RuntimeException("Пользователь не найден.");
             }
-            PersonRequest person = personResponse.getLover().toBuilder().preference(message.getText()).build();
+            PersonRequest person = personResponse.getUser().toBuilder().preference(message.getText()).build();
             requestRunner.runnerPutUser(person);
             userState.setBotState(BotState.SHOW_MAIN_MENU);
             SendMessage sendMessage = new SendMessage(longId.toString(), "Вы успешно внесли изменение.");
@@ -140,7 +131,9 @@ public class ChangeServiceImpl implements ChangeService {
                     (Arrays.asList(MenuButton.FORM_BUTTON, MenuButton.SEARCH_BUTTON, MenuButton.FAVORITE_BUTTON)));
             return sendMessage;
         } else {
-            throw new RuntimeException("Пользователь не внёс изменение.");
+            return new SendMessage(message.getFrom().getId().toString(),
+                    "Доступно:\n" + Preferences.ALL_AIM.getName() + "\n"
+                            + Preferences.FEMALE_AIM.getName() + "\n" + Preferences.MALE_AIM.getName());
         }
     }
 }

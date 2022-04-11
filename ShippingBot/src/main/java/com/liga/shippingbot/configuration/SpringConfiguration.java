@@ -40,7 +40,6 @@ public class SpringConfiguration {
 
     @Bean
     public UserState userState() {
-
         return UserState.builder().build();
     }
 

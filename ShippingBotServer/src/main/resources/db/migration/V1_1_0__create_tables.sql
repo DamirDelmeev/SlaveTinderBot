@@ -1,36 +1,28 @@
-create table lover
+CREATE TABLE users
 (
-    id          bigint                             not null unique,
-    name        varchar(30)                        not null,
-    gender      varchar(30)                        not null,
-    preference  varchar(10) default 'all'          not null,
-    description text        default 'Описания нет' not null,
-    primary key (id)
+    chat_id     bigint NOT NULL UNIQUE,
+    name        VARCHAR(30),
+    gender      VARCHAR(30),
+    preference  VARCHAR(10) DEFAULT 'all',
+    description text        DEFAULT 'Описания нет',
+    PRIMARY KEY (chat_id)
 );
 
 
-create table likes
+CREATE TABLE watch_lover
 (
-    one bigint,
-    two bigint,
-    primary key (one, two),
-    foreign key (one) references lover (id) on delete cascade on update no action,
-    foreign key (two) references lover (id) on delete cascade on update no action
-);
-
-create table dislikes
-(
-    whoId    bigint,
-    targetId bigint,
-    primary key (whoId, targetId),
-    foreign key (whoId) references lover (id) on delete cascade on update no action,
-    foreign key (targetId) references lover (id) on delete cascade on update no action
-);
-
-create table watch_lover
-(
-    id      bigint unique,
+    id      bigint UNIQUE,
     counter bigint,
-    primary key (id),
-    foreign key (id) references lover (id) on delete cascade on update no action
+    PRIMARY KEY (id),
+    FOREIGN KEY (id) REFERENCES users (chat_id) ON DELETE CASCADE ON UPDATE NO ACTION
+);
+
+CREATE TABLE attitude
+(
+    id             serial NOT NULL PRIMARY KEY,
+    initiator      bigint NOT NULL,
+    target         bigint NOT NULL,
+    name_of_action VARCHAR(30),
+    FOREIGN KEY (initiator) REFERENCES users (chat_id),
+    FOREIGN KEY (target) REFERENCES users (chat_id)
 );

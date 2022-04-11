@@ -1,128 +1,79 @@
 package com.example.shippingbotserver.controller;
 
-import com.example.shippingbotserver.dao.DaoProcessing;
-import com.example.shippingbotserver.entity.Lover;
-import com.example.shippingbotserver.view.FormLoverModel;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.shippingbotserver.dto.UserDto;
+import com.example.shippingbotserver.entity.User;
+import com.example.shippingbotserver.exceptions.ImageDrawerErrorException;
+import com.example.shippingbotserver.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
+import java.io.IOException;
+
 @RestController
+@RequestMapping("/user")
+@RequiredArgsConstructor
 public class ServerController {
 
-    private final DaoProcessing daoProcessing;
+    private final UserService userService;
 
-    @Autowired
-    public ServerController(DaoProcessing daoProcessing) {
-        this.daoProcessing = daoProcessing;
-    }
-
-    @GetMapping("/person/{id}")
-    public @ResponseBody ResponseEntity<FormLoverModel> getLoverByUserId(@PathVariable("id") Long request) {
-        log.debug("log message {}", "request by /server/person/" + request);
-        FormLoverModel form;
+    @GetMapping("/{id}")
+    public UserDto user(@PathVariable("id") Long id) {
         try {
-            form = daoProcessing.findLoverById(request);
-        } catch (RuntimeException e) {
-            log.debug("log message {}", e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return userService.findUser(id);
+        } catch (IOException e) {
+            throw new ImageDrawerErrorException();
         }
-        log.debug("log message {}", "Response OK");
-        return new ResponseEntity<>(form, HttpStatus.OK);
     }
 
-    @GetMapping("/person/{id}/show/lovers")
-    public @ResponseBody ResponseEntity<FormLoverModel> showQuestionnaire(@PathVariable Long id) {
-        log.debug("log message {}", "request by /server/person/" + id + "/show/lovers");
+    @GetMapping("/{id}/search")
+    public UserDto showQuestionnaire(@PathVariable Long id) {
 
-        FormLoverModel formLoverModel;
         try {
-            formLoverModel = daoProcessing.getQuestionnaire(id);
-        } catch (RuntimeException e) {
-            log.debug("log message {}", e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return userService.search(id);
+        } catch (IOException e) {
+            throw new ImageDrawerErrorException();
         }
-
-        log.debug("log message {}", "Response OK");
-        return new ResponseEntity<>(formLoverModel, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}/preference/{action}")
-    public @ResponseBody ResponseEntity<FormLoverModel> getLoverPreference(@PathVariable("id") Long id,
-                                                                           @PathVariable("action") String action) {
-        log.debug("log message {}", "request by /server/" + id + "/preference/" + action);
-
-        FormLoverModel favorite;
+    @GetMapping("/{id}/favorites/{action}")
+    public UserDto userFavorites(@PathVariable("id") Long id,
+                                 @PathVariable("action") String action) {
         try {
-            favorite = daoProcessing.getFavorite(id, action);
-        } catch (RuntimeException e) {
-            log.debug("log message {}", e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return userService.getFavorite(id, action);
+        } catch (IOException e) {
+            throw new ImageDrawerErrorException();
         }
-
-        log.debug("log message {}", "Response OK");
-        return new ResponseEntity<>(favorite, HttpStatus.OK);
     }
 
-    @PostMapping("/person/dislike")
-    public @ResponseBody ResponseEntity<FormLoverModel> dislikeLover(@RequestBody Lover id) {
-        log.debug("log message {}", "request by /server/person/dislike with parameter" + id.getId());
-        FormLoverModel formLoverModel;
+    @PostMapping("/attitude/{action}")
+    public UserDto attitude(@RequestBody User user, @PathVariable String action) {
         try {
-            formLoverModel = daoProcessing.dislike(id);
-        } catch (RuntimeException e) {
-            log.debug("log message {}", e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return userService.attitudePush(user, action);
+        } catch (IOException e) {
+            throw new ImageDrawerErrorException();
         }
-
-        log.debug("log message {}", "Response OK");
-        return new ResponseEntity<>(formLoverModel, HttpStatus.OK);
-    }
-
-    @PostMapping("/person/like")
-    public @ResponseBody ResponseEntity<FormLoverModel> likeLover(@RequestBody Lover id) {
-        log.debug("log message {}", "request by /server/person/like with parameter" + id.getId());
-
-        FormLoverModel formLoverModel;
-        try {
-            formLoverModel = daoProcessing.like(id);
-        } catch (RuntimeException e) {
-            log.debug("log message {}", e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
-
-        log.debug("log message {}", "Response OK");
-        return new ResponseEntity<>(formLoverModel, HttpStatus.OK);
     }
 
 
-    @PostMapping("/person")
+    @PostMapping("/")
     @ResponseStatus(HttpStatus.OK)
-    public String addPersonQuery(@RequestBody Lover person) {
-        log.debug("log message {}", "request by /server/person with parameter" + person);
-        daoProcessing.saveLover(person);
-        log.debug("log message {}", "Response OK");
+    public String addPersonQuery(@RequestBody User user) {
+        userService.saveLover(user);
         return "OK";
     }
 
-    @PutMapping("/update/person")
+    @PutMapping("/")
     @ResponseStatus(HttpStatus.OK)
-    public String personPutQuery(@RequestBody Lover person) {
-        log.debug("log message {}", "request by /server/update/person with parameter" + person);
-        daoProcessing.update(person);
-        log.debug("log message {}", "Response OK");
+    public String personPutQuery(@RequestBody User person) {
+        userService.update(person);
         return "OK";
     }
 
-    @DeleteMapping("/person/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public String personDeleteQuery(@PathVariable("id") Long id) {
-        log.debug("log message {}", "request by /server/person/" + id);
-        daoProcessing.deleteLover(id);
-        log.debug("log message {}", "Response OK");
+        userService.deleteUser(id);
         return "OK";
     }
 }

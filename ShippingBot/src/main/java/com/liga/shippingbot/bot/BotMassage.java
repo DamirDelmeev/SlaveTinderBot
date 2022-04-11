@@ -1,6 +1,8 @@
 package com.liga.shippingbot.bot;
 
 import com.liga.shippingbot.configuration.TelegramConfig;
+import com.liga.shippingbot.constants.Commands;
+import com.liga.shippingbot.constants.Gender;
 import com.liga.shippingbot.constants.MenuButton;
 import com.liga.shippingbot.services.ChangeServiceImpl;
 import com.liga.shippingbot.services.FormServiceImpl;
@@ -31,16 +33,16 @@ public class BotMassage extends SpringWebhookBot {
     /**
      * ("${telegram.webhook-path}")
      */
-    private final String botPath;//исправить
-    //  public static final int i=0;
+    private final String botPath;
+
     /**
      * ("${telegram.bot-name}")
      */
-    private final String botUsername;//исправить
+    private final String botUsername;
     /**
      * ("${telegram.bot-token}")
      */
-    private final String botToken;//исправить
+    private final String botToken;
     /**
      * Объект класса обработчика основного меню.
      */
@@ -121,7 +123,6 @@ public class BotMassage extends SpringWebhookBot {
                 getPhoto(update);
                 return right;
             }
-
             if (update.getMessage().getText().equals(MenuButton.LIKE_BUTTON.getName()) &
                     userState.getBotState().equals(BotState.SHOW_SEARCH)) {
 
@@ -133,7 +134,6 @@ public class BotMassage extends SpringWebhookBot {
                 getPhoto(update);
                 return likeForm;
             }
-
             if (update.getMessage().getText().equals(MenuButton.DISLIKE_BUTTON.getName())
                     & userState.getBotState().equals(BotState.SHOW_SEARCH)) {
                 BotApiMethod<?> disLikeForm = messageServiceImpl.getDislike
@@ -160,25 +160,30 @@ public class BotMassage extends SpringWebhookBot {
         }
         Long idUser = update.getMessage().getFrom().getId();
         String text = update.getMessage().getText();
-        if (!text.equals("/start") && !text.equals("/continue") && userState.getBotState() == null & userState.getId() == null) {
-            BotApiMethod<?> form = messageServiceImpl.getCommands(update.getMessage().getFrom().getId(), userState);
-            return form;
-        }
-        if (update.getMessage().getText().equals("/continue")) {
-            BotApiMethod<?> form = messageServiceImpl.getContinue(update.getMessage().getFrom().getId(), userState);
+        BotApiMethod<?> form = getUserFormAfterReload(update, text);
+        if (form != null) return form;
+        if (update.getMessage().getText().equals(Commands.CONTINUE.getName())) {
+            form = messageServiceImpl.getContinue(update.getMessage().getFrom().getId(), userState);
             getPhoto(update);
             return form;
-        } else if (update.getMessage().getText().equals("/start") ||
+        } else if (update.getMessage().getText().equals(Commands.START.getName()) ||
                 userState.getBotState().equals(BotState.CREATING_STATE)) {
             userState.setId(idUser);
             return formServiceImpl.startMessage(update.getMessage(), idUser, userState);
         }
-//        else if (userState.getId() == null) {
-//            BotApiMethod<?> form = messageServiceImpl.getForm(update.getMessage().getFrom().getId(), userState);
-//            getPhoto(update);
-//            return form;
-//        }
+        return null;
+    }
 
+    private BotApiMethod<?> getUserFormAfterReload(Update update, String text) {
+        if (!text.equals(Commands.START.getName()) && !text.equals(Commands.CONTINUE.getName())
+                && userState.getBotState() == null & userState.getId() == null) {
+            BotApiMethod<?> form = messageServiceImpl.getCommands
+                    (update.getMessage().getFrom().getId(), userState, update.getMessage());
+            if (((SendMessage) form).getText().contains(Gender.MALE.getName()) || ((SendMessage) form).getText().contains(Gender.FEMALE.getName())) {
+                getPhoto(update);
+            }
+            return form;
+        }
         return null;
     }
 
@@ -189,24 +194,24 @@ public class BotMassage extends SpringWebhookBot {
      */
     private BotApiMethod<?> getChoose(Update update) {
         BotState botState = userState.getBotState();
-        if (botState != null & (update.getMessage().getText()).equals("Изменить анкету")) {
+        if (botState != null & (update.getMessage().getText()).equals(MenuButton.CHANGE_BUTTON.getName())) {
             userState.setBotState(BotState.CHANGES);
             return changeServiceImpl.getChangeFormFirstStage(update.getMessage().getFrom().getId(), userState);
         }
-        if (botState != null & (update.getMessage().getText()).equals("Любимцы")) {
+        if (botState != null & (update.getMessage().getText()).equals(MenuButton.FAVORITE_BUTTON.getName())) {
             BotApiMethod<?> favorite =
                     messageServiceImpl.getFavorite(update.getMessage(), update.getMessage().getFrom().getId(), userState);
             userState.setBotState(BotState.SHOW_FAVORITE);
             getPhoto(update);
             return favorite;
         }
-        if (botState != null & (update.getMessage().getText()).equals("Поиск")) {
+        if (botState != null & (update.getMessage().getText()).equals(MenuButton.SEARCH_BUTTON.getName())) {
             BotApiMethod<?> search = messageServiceImpl.getSearch(update.getMessage().getFrom().getId(), userState);
             userState.setBotState(BotState.SHOW_SEARCH);
             getPhoto(update);
             return search;
         }
-        if (botState != null & (update.getMessage().getText()).equals("Анкета")) {
+        if (botState != null & (update.getMessage().getText()).equals(MenuButton.FORM_BUTTON.getName())) {
             userState.setBotState(BotState.SHOW_MAIN_MENU);
             BotApiMethod<?> form = messageServiceImpl.getForm(update.getMessage().getFrom().getId(), userState);
             getPhoto(update);
@@ -222,19 +227,19 @@ public class BotMassage extends SpringWebhookBot {
      */
     private BotApiMethod<?> getChangeInForm(Update update) {
         BotState botState = userState.getBotState();
-        if (botState.equals(BotState.CHANGES) & update.getMessage().getText().equals("Пол")) {
+        if (botState.equals(BotState.CHANGES) & update.getMessage().getText().equals(MenuButton.CHANGE_GENDER_BUTTON.getName())) {
             userState.setBotState(BotState.CHANGE_GENDER);
             return changeServiceImpl.getChangeGenderSecondStage(update.getMessage().getFrom().getId(), userState);
         }
-        if (botState.equals(BotState.CHANGES) & update.getMessage().getText().equals("Имя")) {
+        if (botState.equals(BotState.CHANGES) & update.getMessage().getText().equals(MenuButton.CHANGE_NAME_BUTTON.getName())) {
             userState.setBotState(BotState.CHANGE_NAME);
             return changeServiceImpl.getChangeNameSecondStage(update.getMessage().getFrom().getId(), userState);
         }
-        if (botState.equals(BotState.CHANGES) & update.getMessage().getText().equals("Описание")) {
+        if (botState.equals(BotState.CHANGES) & update.getMessage().getText().equals(MenuButton.CHANGE_DESCRIPTION_BUTTON.getName())) {
             userState.setBotState(BotState.CHANGE_DESCRIPTION);
             return changeServiceImpl.getChangeDescriptionSecondStage(update.getMessage().getFrom().getId(), userState);
         }
-        if (botState.equals(BotState.CHANGES) & update.getMessage().getText().equals("Приоритет поиска")) {
+        if (botState.equals(BotState.CHANGES) & update.getMessage().getText().equals(MenuButton.CHANGE_PREFERENCE_BUTTON.getName())) {
             userState.setBotState(BotState.CHANGE_PREFERENCE);
             return changeServiceImpl.getChangePreferenceSecondStage(update.getMessage().getFrom().getId(), userState);
         }

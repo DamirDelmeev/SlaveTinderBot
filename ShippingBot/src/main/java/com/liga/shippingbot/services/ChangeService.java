@@ -7,7 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 /**
  * Класс реализующий этот интерфейс будет производить обработку изменений в анкету.
  */
-public interface ChangeService {//Исправить
+public interface ChangeService {
 
 
     /**
